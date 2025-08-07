@@ -1,0 +1,59 @@
+# Core framework dependencies
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+python-dotenv>=1.0.0
+click>=8.0.0
+rich>=13.0.0
+typer>=0.9.0
+
+# LangGraph and LangChain
+langgraph>=0.0.60
+langchain>=0.1.0
+langchain-core>=0.1.0
+langchain-openai>=0.0.8
+langchain-anthropic>=0.1.0
+
+# LLM providers
+openai>=1.0.0
+anthropic>=0.18.0
+
+# Code execution and analysis
+docker>=6.0.0
+ast-grep-py>=0.15.0
+flake8>=6.0.0
+black>=23.0.0
+isort>=5.12.0
+mypy>=1.5.0
+bandit>=1.7.5
+
+# Async and concurrency
+asyncio>=3.4.3
+aiofiles>=23.0.0
+httpx>=0.24.0
+
+# Data processing
+pandas>=2.0.0
+numpy>=1.24.0
+jsonlines>=3.1.0
+
+# Monitoring and logging
+structlog>=23.0.0
+wandb>=0.15.0
+
+# Ray for distributed computing
+ray[default]>=2.6.0
+
+# Development dependencies
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+pytest-mock>=3.11.0
+ruff>=0.0.290
+pre-commit>=3.3.0
+
+# VERL training dependencies (optional)
+# torch>=2.0.0
+# transformers>=4.30.0
+# accelerate>=0.20.0
+# datasets>=2.14.0
+# tensorboard>=2.13.0

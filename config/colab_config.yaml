@@ -1,0 +1,122 @@
+# Google Colab Configuration for VERL + LangGraph Multi-Agent Coding Framework
+# Optimized for Colab environments with resource constraints
+
+version: "0.1.0"
+environment: "colab"
+debug: true
+
+llm:
+  # Default to HuggingFace models for Colab (no API keys required)
+  provider: "huggingface"
+  model: "microsoft/DialoGPT-medium"  # Lightweight model for testing
+  temperature: 0.7
+  max_tokens: 1024  # Reduced for memory constraints
+  timeout: 120
+  
+  # HuggingFace specific settings optimized for Colab
+  device_map: "auto"
+  torch_dtype: "float16"  # Memory efficient
+  trust_remote_code: true
+  use_auth_token: false
+
+# Agent configurations optimized for Colab
+agents:
+  generator:
+    temperature: 0.7
+    max_tokens: 1024  # Reduced for memory
+    timeout: 90
+    retry_attempts: 2
+    include_comments: true
+    include_docstrings: true
+    default_language: "python"
+    supported_languages: ["python", "javascript"]  # Reduced set for Colab
+    
+  reviewer:
+    temperature: 0.3
+    max_tokens: 1024
+    timeout: 90
+    retry_attempts: 2
+    focus_areas: ["correctness", "style", "performance"]  # Reduced focus areas
+    include_suggestions: true
+    security_focused: true
+    
+  executor:
+    temperature: 0.5
+    max_tokens: 512
+    timeout: 60
+    retry_attempts: 2
+    
+    # Colab-specific execution settings (no Docker)
+    execution_timeout: 30
+    sandboxed_execution: false  # Docker not available in Colab
+    docker_enabled: false
+    network_disabled: false  # Can't control in Colab
+    
+    # Limited language support for Colab
+    supported_languages: ["python"]  # Colab primarily supports Python
+
+# Workflow configuration optimized for Colab resources
+workflow:
+  max_iterations: 2  # Reduced to save resources
+  human_in_loop: false
+  target_review_score: 70.0  # Slightly lower threshold
+  min_execution_score: 50.0
+  human_feedback_threshold: 30.0
+  skip_execution_on_security_issues: true
+  require_review_before_execution: true
+  auto_iterate_on_failure: true
+
+# Training configuration for Colab (if using VERL)
+training:
+  data_path: "/content/data/training_problems"
+  evaluation_data_path: "/content/data/evaluation_sets"
+  algorithm: "ppo"
+  episodes: 50  # Reduced for Colab
+  batch_size: 4   # Small batch size for memory
+  learning_rate: 2e-5
+  checkpoint_dir: "/content/checkpoints"
+  save_interval: 10
+
+# Logging optimized for Colab
+logging:
+  level: "INFO"
+  format: "text"  # Better for Colab output
+  file_path: null  # Don't write to files in Colab
+  include_timestamps: true
+  include_context: true
+  max_message_length: 500  # Shorter for Colab display
+
+# Security settings for Colab
+security:
+  enable_security_scanning: true
+  # Colab-safe blocked imports (more permissive than production)
+  blocked_imports: ["subprocess", "os.system"]
+  sandbox_all_execution: false  # Can't sandbox in Colab
+  network_isolation: false
+  file_system_isolation: false
+  resource_limits: true
+
+# System settings optimized for Colab resources
+max_concurrent_requests: 2  # Reduced for memory
+request_timeout: 180  # Longer timeout for slower Colab execution
+
+# Colab-specific settings
+colab:
+  mount_drive: true
+  use_gpu: true
+  memory_limit: "12GB"  # Colab Pro limit
+  disk_limit: "100GB"
+  
+  # Model caching settings
+  cache_models: true
+  cache_dir: "/content/model_cache"
+  
+  # Output settings
+  display_code_highlighting: true
+  show_progress_bars: true
+  save_outputs_to_drive: true
+  
+  # Resource monitoring
+  monitor_gpu_usage: true
+  monitor_memory_usage: true
+  auto_clear_cache: true
