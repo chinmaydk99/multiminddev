@@ -83,6 +83,9 @@ class VERLPPOTrainer(BaseTrainer):
         self.is_training = True
         self._total_episodes = episodes
         self._initialize_training_metrics()
+        
+        # Extract context from kwargs for reward functions
+        self.training_context = kwargs.get("context", {})
 
         time.time()
 
@@ -226,14 +229,17 @@ class VERLPPOTrainer(BaseTrainer):
 
                     # Calculate reward using reward function
                     if reward_function:
+                        # Use agents from training context if available
+                        reward_context = {
+                            "executor_agent": self.training_context.get("executor_agent"),
+                            "reviewer_agent": self.training_context.get("reviewer_agent"),
+                        }
+                        
                         reward = await reward_function.calculate_reward(
                             problem=problem,
                             generated_code=generated_code,
                             test_cases=test_cases,
-                            context={
-                                "executor_agent": None,  # Will be provided by supervisor
-                                "reviewer_agent": None,  # Will be provided by supervisor
-                            },
+                            context=reward_context,
                         )
                     else:
                         # Simple correctness check as fallback

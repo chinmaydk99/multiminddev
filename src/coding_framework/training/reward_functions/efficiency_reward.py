@@ -213,6 +213,16 @@ class EfficiencyReward(BaseRewardFunction):
         exec_locals = {}
 
         try:
+            # Validate code is not empty and has valid syntax
+            if not code or not code.strip():
+                raise RuntimeError("Empty code provided")
+                
+            # Check syntax before execution
+            try:
+                compile(code, '<string>', 'exec')
+            except SyntaxError as e:
+                raise RuntimeError(f"Code has invalid syntax: {e}")
+            
             # Execute the code
             exec(code, exec_globals, exec_locals)
 

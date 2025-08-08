@@ -1,0 +1,1009 @@
+🚀 Quick VERL Training Demo (5 episodes)
+==================================================
+2025-08-08 02:25:41 [info     ] Supervisor initialized         component=supervisor config_version=0.1.0
+2025-08-08 02:25:41 [info     ] Initializing supervisor components component=supervisor
+2025-08-08 02:25:42 [info     ] Connection test successful     component=llm_interface provider=openai response_length=2
+2025-08-08 02:25:42 [info     ] LLM interface initialized successfully component=llm_interface provider=openai
+2025-08-08 02:25:42 [info     ] LLM interface initialized      component=supervisor provider=openai
+2025-08-08 02:25:42 [info     ] Agent initialized              agent_id=generator_001 agent_type=code_generator config={'temperature': 0.7, 'max_tokens': 2048, 'timeout': 60, 'retry_attempts': 3, 'enabled': True, 'debug': False, 'include_comments': True, 'include_docstrings': True, 'optimize_for_readability': True, 'default_language': 'python', 'supported_languages': ['python', 'javascript', 'typescript', 'java', 'cpp', 'go', 'rust']}
+2025-08-08 02:25:42 [info     ] Agent initialized              agent_id=reviewer_001 agent_type=code_reviewer config={'temperature': 0.3, 'max_tokens': 2048, 'timeout': 60, 'retry_attempts': 3, 'enabled': True, 'debug': False, 'focus_areas': ['correctness', 'style', 'performance', 'security', 'maintainability'], 'severity_levels': ['low', 'medium', 'high', 'critical'], 'min_review_score': 0.0, 'include_suggestions': True, 'include_examples': True, 'security_focused': True}
+2025-08-08 02:25:42 [info     ] Agent initialized              agent_id=executor_001 agent_type=code_executor config={'temperature': 0.5, 'max_tokens': 2048, 'timeout': 60, 'retry_attempts': 3, 'enabled': True, 'debug': False, 'execution_timeout': 30, 'memory_limit': '512m', 'cpu_limit': '1.0', 'sandboxed_execution': True, 'network_disabled': True, 'docker_enabled': True, 'docker_image_timeout': 300, 'supported_languages': ['python', 'javascript', 'typescript', 'java', 'cpp', 'go', 'rust']}
+2025-08-08 02:25:42 [warning  ] Docker not available: Error while fetching server API version: ('Connection aborted.', FileNotFoundError(2, 'No such file or directory')) agent_id=executor_001 agent_type=code_executor
+2025-08-08 02:25:42 [info     ] All agents initialized         agent_count=3 component=supervisor
+2025-08-08 02:25:42 [info     ] Making LLM call                component=llm_interface max_tokens=10 message_count=2 provider=openai temperature=0.7
+2025-08-08 02:25:42 [info     ] Making LLM call                component=llm_interface max_tokens=10 message_count=2 provider=openai temperature=0.5
+2025-08-08 02:25:42 [info     ] Making LLM call                component=llm_interface max_tokens=10 message_count=2 provider=openai temperature=0.3
+2025-08-08 02:25:42 [info     ] LLM call successful            component=llm_interface provider=openai response_length=2 response_time=0.4130828380584717
+2025-08-08 02:25:42 [info     ] LLM call successful            agent_id=executor_001 agent_type=code_executor execution_time=0.5137944221496582 response_length=2
+2025-08-08 02:25:42 [info     ] Health check passed            agent_id=executor_001 agent_type=code_executor history_length=0 llm_responsive=True performance_metrics={'last_llm_call_time': 0.5137944221496582, 'total_llm_calls': 1} response_time=0.5138847827911377 state_keys=[] status=healthy
+2025-08-08 02:25:42 [info     ] LLM call successful            component=llm_interface provider=openai response_length=2 response_time=0.5352661609649658
+2025-08-08 02:25:42 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=0.5354435443878174 response_length=2
+2025-08-08 02:25:42 [info     ] Health check passed            agent_id=generator_001 agent_type=code_generator history_length=0 llm_responsive=True performance_metrics={'last_llm_call_time': 0.5354435443878174, 'total_llm_calls': 1} response_time=0.5355548858642578 state_keys=[] status=healthy
+2025-08-08 02:25:43 [info     ] LLM call successful            component=llm_interface provider=openai response_length=2 response_time=0.5231790542602539
+2025-08-08 02:25:43 [info     ] LLM call successful            agent_id=reviewer_001 agent_type=code_reviewer execution_time=0.624514102935791 response_length=2
+2025-08-08 02:25:43 [info     ] Health check passed            agent_id=reviewer_001 agent_type=code_reviewer history_length=0 llm_responsive=True performance_metrics={'last_llm_call_time': 0.624514102935791, 'total_llm_calls': 1} response_time=0.6248738765716553 state_keys=[] status=healthy
+2025-08-08 02:25:43 [info     ] Agent health verified          agent=generator component=supervisor status=healthy
+2025-08-08 02:25:43 [info     ] Agent health verified          agent=reviewer component=supervisor status=healthy
+2025-08-08 02:25:43 [info     ] Agent health verified          agent=executor component=supervisor status=healthy
+2025-08-08 02:25:43 [info     ] Workflow initialized           component=supervisor
+2025-08-08 02:25:43 [info     ] Supervisor initialization completed component=supervisor
+2025-08-08 02:25:43 [info     ] Starting VERL agent training   algorithm=ppo component=supervisor episodes=5
+2025-08-08 02:25:43 [info     ] Initializing VERL training components component=supervisor
+2025-08-08 02:25:43 [info     ] Trainer initialized            component=trainer config={'data_path': './data/training_problems', 'evaluation_data_path': './data/evaluation_sets', 'algorithm': 'ppo', 'episodes': 100, 'batch_size': 8, 'learning_rate': 1e-05, 'checkpoint_dir': './checkpoints', 'save_interval': 10, 'wandb_project': None, 'log_interval': 1, 'reward_weights': {'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}, 'verl': {'kl_coef': 0.001, 'ppo_epochs': 4, 'mini_batch_size': 2, 'clip_ratio': 0.2, 'value_clip_ratio': 0.2, 'max_grad_norm': 1.0, 'entropy_coef': 0.01, 'value_loss_coef': 0.5}} trainer_type=VERLPPOTrainer
+2025-08-08 02:25:43 [info     ] VERL PPO Trainer initialized   component=trainer trainer_type=VERLPPOTrainer verl_config={'kl_coef': 0.001, 'ppo_epochs': 4, 'mini_batch_size': 2, 'clip_ratio': 0.2, 'value_clip_ratio': 0.2, 'max_grad_norm': 1.0, 'entropy_coef': 0.01, 'value_loss_coef': 0.5}
+2025-08-08 02:25:43 [info     ] Training data loader initialized component=data_loader data_path=data/training_problems validation_split=0.2
+2025-08-08 02:25:43 [info     ] Reward function initialized    component=reward_function function_type=CompositeReward normalize_range=(-1.0, 1.0) weight=1.0
+2025-08-08 02:25:43 [info     ] Reward function initialized    component=reward_function function_type=CorrectnessReward normalize_range=(0.0, 1.0) weight=1.0
+2025-08-08 02:25:43 [info     ] Correctness reward function initialized component=reward_function function_type=CorrectnessReward safe_execution=True timeout=10.0
+2025-08-08 02:25:43 [info     ] Reward function initialized    component=reward_function function_type=StyleReward normalize_range=(-1.0, 1.0) weight=1.0
+2025-08-08 02:25:43 [info     ] Style reward function initialized complexity_threshold=10 component=reward_function function_type=StyleReward use_mypy=True use_reviewer_agent=True use_ruff=True
+2025-08-08 02:25:43 [info     ] Reward function initialized    component=reward_function function_type=EfficiencyReward normalize_range=(-1.0, 1.0) weight=1.0
+2025-08-08 02:25:43 [info     ] Efficiency reward function initialized component=reward_function function_type=EfficiencyReward max_execution_time=5.0 max_memory_mb=100.0 memory_weight=0.4 time_weight=0.6
+2025-08-08 02:25:43 [info     ] Composite reward function initialized component=reward_function correctness_kwargs={'timeout': 10.0, 'safe_execution': True} efficiency_kwargs={'max_execution_time': 5.0, 'max_memory_mb': 100.0} function_type=CompositeReward style_kwargs={'use_reviewer_agent': True, 'use_ruff': True} weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:25:43 [info     ] Loading training data          component=supervisor
+2025-08-08 02:25:43 [debug    ] Loaded 15 problems from data/training_problems/simple_problems.json component=data_loader
+2025-08-08 02:25:43 [info     ] Validated 15 problems (0 invalid) component=data_loader
+2025-08-08 02:25:43 [info     ] Training data loaded successfully component=data_loader total_problems=15 training_problems=12 validation_problems=3
+2025-08-08 02:25:43 [info     ] Training data loaded           component=supervisor training_problems=12 validation_problems=3
+2025-08-08 02:25:43 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=training_mode value_type=bool
+2025-08-08 02:25:43 [info     ] Starting VERL PPO training loop component=supervisor
+2025-08-08 02:25:43 [info     ] Starting VERL PPO training     agent_id=generator_001 component=trainer episodes=5 trainer_type=VERLPPOTrainer training_data_size=12
+2025-08-08 02:25:43 [info     ] Initializing VERL components   component=trainer trainer_type=VERLPPOTrainer
+2025-08-08 02:25:43 [info     ] VERL components initialized successfully component=trainer trainer_type=VERLPPOTrainer
+2025-08-08 02:25:43 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=61
+2025-08-08 02:25:43 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:25:43 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:25:43 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=3 provider=openai temperature=0.7
+2025-08-08 02:25:46 [info     ] LLM call successful            component=llm_interface provider=openai response_length=559 response_time=3.464608669281006
+2025-08-08 02:25:46 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=3.4647791385650635 response_length=559
+2025-08-08 02:25:46 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=545 detected_functions=['count_words'] estimated_complexity=simple execution_time=3.4653749465942383 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:25:46 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:25:46 [debug    ] Reward calculated              component=reward_function execution_time=0.00013494491577148438 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:25:46 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:25:46 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=9 warnings=0
+2025-08-08 02:25:46 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:25:46 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:25:46 [debug    ] Reward calculated              component=reward_function execution_time=0.1683037281036377 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:25:46 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:25:46 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:25:46 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:25:46 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:25:46 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:25:46 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:25:46 [debug    ] Reward calculated              component=reward_function execution_time=0.001589059829711914 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:25:46 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:25:46 [debug    ] Reward calculated              component=reward_function execution_time=0.17043089866638184 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:25:46 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=84
+2025-08-08 02:25:46 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:25:46 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:25:46 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=5 provider=openai temperature=0.7
+2025-08-08 02:25:50 [info     ] LLM call successful            component=llm_interface provider=openai response_length=993 response_time=3.542442798614502
+2025-08-08 02:25:50 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=3.542605400085449 response_length=993
+2025-08-08 02:25:50 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=979 detected_functions=['remove_duplicates'] estimated_complexity=moderate execution_time=3.5430171489715576 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:25:50 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:25:50 [debug    ] Reward calculated              component=reward_function execution_time=0.00013113021850585938 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:25:50 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:25:50 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:25:50 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:25:50 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:25:50 [debug    ] Reward calculated              component=reward_function execution_time=0.15285038948059082 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:25:50 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:25:50 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:25:50 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:25:50 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:25:50 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:25:50 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:25:50 [debug    ] Reward calculated              component=reward_function execution_time=0.001432180404663086 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:25:50 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:25:50 [debug    ] Reward calculated              component=reward_function execution_time=0.1548769474029541 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:25:50 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=61
+2025-08-08 02:25:50 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:25:50 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:25:50 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=7 provider=openai temperature=0.7
+2025-08-08 02:25:52 [info     ] LLM call successful            component=llm_interface provider=openai response_length=493 response_time=2.525273323059082
+2025-08-08 02:25:52 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=2.5254387855529785 response_length=493
+2025-08-08 02:25:52 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=479 detected_functions=['reverse_string'] estimated_complexity=simple execution_time=2.525869369506836 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:25:52 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:25:52 [debug    ] Reward calculated              component=reward_function execution_time=0.00012302398681640625 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:25:52 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:25:52 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:25:53 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:25:53 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:25:53 [debug    ] Reward calculated              component=reward_function execution_time=0.14870452880859375 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:25:53 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:25:53 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:25:53 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:25:53 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:25:53 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:25:53 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:25:53 [debug    ] Reward calculated              component=reward_function execution_time=0.0014269351959228516 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:25:53 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:25:53 [debug    ] Reward calculated              component=reward_function execution_time=0.15065264701843262 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:25:53 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=62
+2025-08-08 02:25:53 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:25:53 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:25:53 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=9 provider=openai temperature=0.7
+2025-08-08 02:25:57 [info     ] LLM call successful            component=llm_interface provider=openai response_length=920 response_time=4.392210960388184
+2025-08-08 02:25:57 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=4.39238977432251 response_length=920
+2025-08-08 02:25:57 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=906 detected_functions=['count_vowels'] estimated_complexity=moderate execution_time=4.3928046226501465 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:25:57 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:25:57 [debug    ] Reward calculated              component=reward_function execution_time=0.00012826919555664062 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:25:57 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:25:57 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:25:57 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:25:57 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:25:57 [debug    ] Reward calculated              component=reward_function execution_time=0.15198516845703125 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:25:57 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:25:57 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:25:57 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:25:57 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:25:57 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:25:57 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:25:57 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:25:57 [debug    ] Reward calculated              component=reward_function execution_time=0.001672506332397461 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:25:57 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:25:57 [debug    ] Reward calculated              component=reward_function execution_time=0.1541755199432373 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:25:57 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=50
+2025-08-08 02:25:57 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:25:57 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:25:57 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=11 provider=openai temperature=0.7
+2025-08-08 02:26:02 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1111 response_time=4.5371246337890625
+2025-08-08 02:26:02 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=4.537298202514648 response_length=1111
+2025-08-08 02:26:02 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1097 detected_functions=['is_prime'] estimated_complexity=moderate execution_time=4.537698745727539 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:26:02 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:26:02 [debug    ] Reward calculated              component=reward_function execution_time=0.0001327991485595703 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:26:02 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:26:02 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=10 warnings=0
+2025-08-08 02:26:02 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:26:02 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:26:02 [debug    ] Reward calculated              component=reward_function execution_time=0.14765667915344238 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:26:02 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:02 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:02 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:02 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:02 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:02 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:02 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:26:02 [debug    ] Reward calculated              component=reward_function execution_time=0.0016617774963378906 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:26:02 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:26:02 [debug    ] Reward calculated              component=reward_function execution_time=0.14984464645385742 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:26:02 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=67
+2025-08-08 02:26:02 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:26:02 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:26:02 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:26:06 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1031 response_time=4.4893834590911865
+2025-08-08 02:26:06 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=4.4895594120025635 response_length=1031
+2025-08-08 02:26:06 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1017 detected_functions=['fibonacci'] estimated_complexity=moderate execution_time=4.489960670471191 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:26:06 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:26:06 [debug    ] Reward calculated              component=reward_function execution_time=0.000133514404296875 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:26:06 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:26:06 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:26:06 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:26:06 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:26:06 [debug    ] Reward calculated              component=reward_function execution_time=0.15075969696044922 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:26:06 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:06 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:06 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:06 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:06 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:06 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:26:06 [debug    ] Reward calculated              component=reward_function execution_time=0.0014500617980957031 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:26:06 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:26:06 [debug    ] Reward calculated              component=reward_function execution_time=0.15273737907409668 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:26:06 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=73
+2025-08-08 02:26:06 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:26:06 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:26:06 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:26:14 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1165 response_time=7.298319101333618
+2025-08-08 02:26:14 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=7.29848313331604 response_length=1165
+2025-08-08 02:26:14 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1151 detected_functions=['factorial'] estimated_complexity=moderate execution_time=7.298994541168213 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:26:14 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:26:14 [debug    ] Reward calculated              component=reward_function execution_time=0.00014352798461914062 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:26:14 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:26:14 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=9 warnings=0
+2025-08-08 02:26:14 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:26:14 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:26:14 [debug    ] Reward calculated              component=reward_function execution_time=0.15201067924499512 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:26:14 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:14 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:14 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:14 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:14 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:14 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:26:14 [debug    ] Reward calculated              component=reward_function execution_time=0.0014715194702148438 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:26:14 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:26:14 [debug    ] Reward calculated              component=reward_function execution_time=0.15401434898376465 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:26:14 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=77
+2025-08-08 02:26:14 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:26:14 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:26:14 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:26:18 [info     ] LLM call successful            component=llm_interface provider=openai response_length=805 response_time=3.8648805618286133
+2025-08-08 02:26:18 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=3.8650472164154053 response_length=805
+2025-08-08 02:26:18 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=791 detected_functions=['even_numbers'] estimated_complexity=moderate execution_time=3.8654301166534424 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:26:18 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:26:18 [debug    ] Reward calculated              component=reward_function execution_time=0.00013709068298339844 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:26:18 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:26:18 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:26:18 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:26:18 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:26:18 [debug    ] Reward calculated              component=reward_function execution_time=0.14833545684814453 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:26:18 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:18 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:18 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:18 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:18 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:18 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:26:18 [debug    ] Reward calculated              component=reward_function execution_time=0.0014944076538085938 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:26:18 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:26:18 [debug    ] Reward calculated              component=reward_function execution_time=0.1503908634185791 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:26:18 [debug    ] Episode completed              component=trainer episode=0 episode_time=35.357808351516724 problems_solved=0 reward=-0.84 total_problems=8 trainer_type=VERLPPOTrainer
+2025-08-08 02:26:18 [info     ] Episode completed              avg_reward=-0.84 component=trainer episode=0 reward=-0.84 trainer_type=VERLPPOTrainer
+2025-08-08 02:26:18 [info     ] Training progress              avg_reward=-0.84 best_reward=-0.84 component=trainer episode=1 episodes_completed=1 trainer_type=VERLPPOTrainer validation_reward=-0.756
+2025-08-08 02:26:18 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=64
+2025-08-08 02:26:18 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:26:18 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:26:18 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:26:22 [info     ] LLM call successful            component=llm_interface provider=openai response_length=685 response_time=3.6508169174194336
+2025-08-08 02:26:22 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=3.65097713470459 response_length=685
+2025-08-08 02:26:22 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=671 detected_functions=['maximum'] estimated_complexity=simple execution_time=3.6513445377349854 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:26:22 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:26:22 [debug    ] Reward calculated              component=reward_function execution_time=0.0001251697540283203 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:26:22 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:26:22 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:26:22 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:26:22 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:26:22 [debug    ] Reward calculated              component=reward_function execution_time=0.14812445640563965 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:26:22 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:22 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:22 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:22 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:22 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:22 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:26:22 [debug    ] Reward calculated              component=reward_function execution_time=0.0014171600341796875 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:26:22 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:26:22 [debug    ] Reward calculated              component=reward_function execution_time=0.15005064010620117 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:26:22 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=77
+2025-08-08 02:26:22 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:26:22 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:26:22 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:26:26 [info     ] LLM call successful            component=llm_interface provider=openai response_length=810 response_time=3.9501001834869385
+2025-08-08 02:26:26 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=3.9502627849578857 response_length=810
+2025-08-08 02:26:26 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=796 detected_functions=['even_numbers'] estimated_complexity=moderate execution_time=3.9506306648254395 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:26:26 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:26:26 [debug    ] Reward calculated              component=reward_function execution_time=0.00013017654418945312 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:26:26 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:26:26 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:26:26 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:26:26 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:26:26 [debug    ] Reward calculated              component=reward_function execution_time=0.14947271347045898 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:26:26 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:26 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:26 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:26 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:26 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:26 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:26:26 [debug    ] Reward calculated              component=reward_function execution_time=0.0014472007751464844 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:26:26 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:26:26 [debug    ] Reward calculated              component=reward_function execution_time=0.15143465995788574 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:26:26 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=84
+2025-08-08 02:26:26 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:26:26 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:26:26 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:26:31 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1390 response_time=5.0373992919921875
+2025-08-08 02:26:31 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=5.037560939788818 response_length=1390
+2025-08-08 02:26:31 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1376 detected_functions=['remove_duplicates'] estimated_complexity=moderate execution_time=5.0379555225372314 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:26:31 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:26:31 [debug    ] Reward calculated              component=reward_function execution_time=0.00013566017150878906 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:26:31 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:26:31 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:26:31 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:26:31 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:26:31 [debug    ] Reward calculated              component=reward_function execution_time=0.15356659889221191 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:26:31 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:31 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:31 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:31 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:31 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:31 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:26:31 [debug    ] Reward calculated              component=reward_function execution_time=0.0014390945434570312 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:26:31 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:26:31 [debug    ] Reward calculated              component=reward_function execution_time=0.15554499626159668 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:26:31 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=66
+2025-08-08 02:26:31 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:26:31 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:26:31 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:26:36 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1080 response_time=4.6998515129089355
+2025-08-08 02:26:36 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=4.700014591217041 response_length=1080
+2025-08-08 02:26:36 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1066 detected_functions=['sum_of_numbers'] estimated_complexity=moderate execution_time=4.700392961502075 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:26:36 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:26:36 [debug    ] Reward calculated              component=reward_function execution_time=0.00012803077697753906 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:26:36 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:26:36 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:26:36 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:26:36 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:26:36 [debug    ] Reward calculated              component=reward_function execution_time=0.15275263786315918 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:26:36 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:36 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:36 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:36 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:36 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:36 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:26:36 [debug    ] Reward calculated              component=reward_function execution_time=0.0014529228210449219 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:26:36 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:26:36 [debug    ] Reward calculated              component=reward_function execution_time=0.1547107696533203 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:26:36 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=97
+2025-08-08 02:26:36 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:26:36 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:26:36 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:26:40 [info     ] LLM call successful            component=llm_interface provider=openai response_length=965 response_time=3.8298094272613525
+2025-08-08 02:26:40 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=3.829989433288574 response_length=965
+2025-08-08 02:26:40 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=951 detected_functions=['is_palindrome'] estimated_complexity=moderate execution_time=3.8303840160369873 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:26:40 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:26:40 [debug    ] Reward calculated              component=reward_function execution_time=0.00013208389282226562 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:26:40 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:26:40 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=10 warnings=0
+2025-08-08 02:26:40 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:26:40 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:26:40 [debug    ] Reward calculated              component=reward_function execution_time=0.15170836448669434 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:26:40 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:40 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:40 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:40 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:40 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:40 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:40 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:26:40 [debug    ] Reward calculated              component=reward_function execution_time=0.0019202232360839844 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:26:40 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:26:40 [debug    ] Reward calculated              component=reward_function execution_time=0.15419769287109375 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:26:40 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=61
+2025-08-08 02:26:40 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:26:40 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:26:40 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:26:45 [info     ] LLM call successful            component=llm_interface provider=openai response_length=875 response_time=5.206145286560059
+2025-08-08 02:26:45 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=5.206322193145752 response_length=875
+2025-08-08 02:26:45 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=861 detected_functions=['count_words'] estimated_complexity=simple execution_time=5.206711530685425 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:26:45 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:26:45 [debug    ] Reward calculated              component=reward_function execution_time=0.00012946128845214844 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:26:45 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:26:45 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:26:45 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:26:45 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:26:45 [debug    ] Reward calculated              component=reward_function execution_time=0.15320634841918945 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:26:45 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:45 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:45 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:45 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:45 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:45 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:26:45 [debug    ] Reward calculated              component=reward_function execution_time=0.0014216899871826172 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:26:45 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:26:45 [debug    ] Reward calculated              component=reward_function execution_time=0.15516304969787598 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:26:45 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=73
+2025-08-08 02:26:45 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:26:45 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:26:45 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:26:51 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1128 response_time=5.501755237579346
+2025-08-08 02:26:51 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=5.501919507980347 response_length=1128
+2025-08-08 02:26:51 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1114 detected_functions=['factorial'] estimated_complexity=moderate execution_time=5.502315998077393 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:26:51 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:26:51 [debug    ] Reward calculated              component=reward_function execution_time=0.00013256072998046875 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:26:51 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:26:51 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=9 warnings=0
+2025-08-08 02:26:51 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:26:51 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:26:51 [debug    ] Reward calculated              component=reward_function execution_time=0.15495729446411133 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:26:51 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:51 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:51 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:51 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:51 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:51 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:26:51 [debug    ] Reward calculated              component=reward_function execution_time=0.0014777183532714844 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:26:51 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:26:51 [debug    ] Reward calculated              component=reward_function execution_time=0.15697622299194336 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:26:51 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=67
+2025-08-08 02:26:51 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:26:51 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:26:51 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:26:55 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1103 response_time=4.557647943496704
+2025-08-08 02:26:55 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=4.55781364440918 response_length=1103
+2025-08-08 02:26:55 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1089 detected_functions=['find_minimum'] estimated_complexity=moderate execution_time=4.5582029819488525 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:26:55 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:26:55 [debug    ] Reward calculated              component=reward_function execution_time=0.00012731552124023438 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:26:55 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:26:55 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:26:56 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:26:56 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:26:56 [debug    ] Reward calculated              component=reward_function execution_time=0.15639114379882812 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:26:56 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:56 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:56 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:56 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:56 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:26:56 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:26:56 [debug    ] Reward calculated              component=reward_function execution_time=0.0015838146209716797 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:26:56 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:26:56 [debug    ] Reward calculated              component=reward_function execution_time=0.15849518775939941 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:26:56 [debug    ] Episode completed              component=trainer episode=1 episode_time=37.67603254318237 problems_solved=0 reward=-0.84 total_problems=8 trainer_type=VERLPPOTrainer
+2025-08-08 02:26:56 [info     ] Episode completed              avg_reward=-0.84 component=trainer episode=1 reward=-0.84 trainer_type=VERLPPOTrainer
+2025-08-08 02:26:56 [info     ] Training progress              avg_reward=-0.84 best_reward=-0.84 component=trainer episode=2 episodes_completed=2 trainer_type=VERLPPOTrainer validation_reward=-0.756
+2025-08-08 02:26:56 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=66
+2025-08-08 02:26:56 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:26:56 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:26:56 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:27:02 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1080 response_time=6.694358825683594
+2025-08-08 02:27:02 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=6.694521427154541 response_length=1080
+2025-08-08 02:27:02 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1066 detected_functions=['sum_of_numbers'] estimated_complexity=moderate execution_time=6.6949303150177 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:27:02 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:27:02 [debug    ] Reward calculated              component=reward_function execution_time=0.00013780593872070312 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:27:02 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:27:02 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:27:02 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:27:02 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:27:02 [debug    ] Reward calculated              component=reward_function execution_time=0.15355134010314941 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:27:02 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:02 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:02 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:02 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:02 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:02 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:27:02 [debug    ] Reward calculated              component=reward_function execution_time=0.0014467239379882812 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:27:02 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:27:02 [debug    ] Reward calculated              component=reward_function execution_time=0.15552306175231934 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:27:02 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=67
+2025-08-08 02:27:02 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:27:02 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:27:02 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:27:07 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1094 response_time=4.342250347137451
+2025-08-08 02:27:07 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=4.342442035675049 response_length=1094
+2025-08-08 02:27:07 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1080 detected_functions=['find_minimum'] estimated_complexity=moderate execution_time=4.342834949493408 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:27:07 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:27:07 [debug    ] Reward calculated              component=reward_function execution_time=0.0001266002655029297 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:27:07 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:27:07 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:27:07 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:27:07 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:27:07 [debug    ] Reward calculated              component=reward_function execution_time=0.15079021453857422 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:27:07 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:07 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:07 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:07 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:07 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:07 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:27:07 [debug    ] Reward calculated              component=reward_function execution_time=0.0014481544494628906 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:27:07 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:27:07 [debug    ] Reward calculated              component=reward_function execution_time=0.15274763107299805 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:27:07 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=77
+2025-08-08 02:27:07 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:27:07 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:27:07 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:27:13 [info     ] LLM call successful            component=llm_interface provider=openai response_length=880 response_time=5.954733848571777
+2025-08-08 02:27:13 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=5.954893350601196 response_length=880
+2025-08-08 02:27:13 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=866 detected_functions=['even_numbers'] estimated_complexity=moderate execution_time=5.955285310745239 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:27:13 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:27:13 [debug    ] Reward calculated              component=reward_function execution_time=0.00012946128845214844 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:27:13 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:27:13 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:27:13 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:27:13 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:27:13 [debug    ] Reward calculated              component=reward_function execution_time=0.1549696922302246 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:27:13 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:13 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:13 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:13 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:13 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:13 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:27:13 [debug    ] Reward calculated              component=reward_function execution_time=0.0014536380767822266 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:27:13 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:27:13 [debug    ] Reward calculated              component=reward_function execution_time=0.15693426132202148 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:27:13 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=64
+2025-08-08 02:27:13 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:27:13 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:27:13 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:27:16 [info     ] LLM call successful            component=llm_interface provider=openai response_length=753 response_time=3.0052378177642822
+2025-08-08 02:27:16 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=3.0053951740264893 response_length=753
+2025-08-08 02:27:16 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=739 detected_functions=['maximum'] estimated_complexity=simple execution_time=3.0057742595672607 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:27:16 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:27:16 [debug    ] Reward calculated              component=reward_function execution_time=0.00013494491577148438 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:27:16 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:27:16 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:27:16 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:27:16 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:27:16 [debug    ] Reward calculated              component=reward_function execution_time=0.15419507026672363 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:27:16 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:16 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:16 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:16 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:16 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:16 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:27:16 [debug    ] Reward calculated              component=reward_function execution_time=0.0014002323150634766 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:27:16 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:27:16 [debug    ] Reward calculated              component=reward_function execution_time=0.15613293647766113 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:27:16 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=50
+2025-08-08 02:27:16 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:27:16 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:27:16 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:27:21 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1111 response_time=4.842584848403931
+2025-08-08 02:27:21 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=4.842753171920776 response_length=1111
+2025-08-08 02:27:21 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1097 detected_functions=['is_prime'] estimated_complexity=moderate execution_time=4.8431360721588135 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:27:21 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:27:21 [debug    ] Reward calculated              component=reward_function execution_time=0.00013756752014160156 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:27:21 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:27:21 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:27:21 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:27:21 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:27:21 [debug    ] Reward calculated              component=reward_function execution_time=0.15481829643249512 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:27:21 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:21 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:21 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:21 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:21 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:21 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:21 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:27:21 [debug    ] Reward calculated              component=reward_function execution_time=0.0016503334045410156 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:27:21 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:27:21 [debug    ] Reward calculated              component=reward_function execution_time=0.156998872756958 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:27:21 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=61
+2025-08-08 02:27:21 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:27:21 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:27:21 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:27:25 [info     ] LLM call successful            component=llm_interface provider=openai response_length=860 response_time=3.367215156555176
+2025-08-08 02:27:25 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=3.367379665374756 response_length=860
+2025-08-08 02:27:25 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=846 detected_functions=['count_words'] estimated_complexity=simple execution_time=3.367755651473999 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:27:25 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:27:25 [debug    ] Reward calculated              component=reward_function execution_time=0.0001399517059326172 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:27:25 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:27:25 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:27:25 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:27:25 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:27:25 [debug    ] Reward calculated              component=reward_function execution_time=0.15372490882873535 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:27:25 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:25 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:25 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:25 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:25 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:25 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:27:25 [debug    ] Reward calculated              component=reward_function execution_time=0.0014355182647705078 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:27:25 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:27:25 [debug    ] Reward calculated              component=reward_function execution_time=0.15571045875549316 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:27:25 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=67
+2025-08-08 02:27:25 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:27:25 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:27:25 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:27:30 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1300 response_time=5.165396690368652
+2025-08-08 02:27:30 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=5.165565729141235 response_length=1300
+2025-08-08 02:27:30 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1286 detected_functions=['fibonacci'] estimated_complexity=moderate execution_time=5.165956974029541 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:27:30 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:27:30 [debug    ] Reward calculated              component=reward_function execution_time=0.00013184547424316406 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:27:30 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:27:30 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:27:30 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:27:30 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:27:30 [debug    ] Reward calculated              component=reward_function execution_time=0.15622520446777344 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:27:30 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:30 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:30 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:30 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:30 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:30 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:27:30 [debug    ] Reward calculated              component=reward_function execution_time=0.0014564990997314453 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:27:30 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:27:30 [debug    ] Reward calculated              component=reward_function execution_time=0.15822148323059082 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:27:30 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=62
+2025-08-08 02:27:30 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:27:30 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:27:30 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:27:34 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1035 response_time=3.793078899383545
+2025-08-08 02:27:34 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=3.7932419776916504 response_length=1035
+2025-08-08 02:27:34 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1021 detected_functions=['count_vowels'] estimated_complexity=moderate execution_time=3.793647527694702 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:27:34 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:27:34 [debug    ] Reward calculated              component=reward_function execution_time=0.00014519691467285156 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:27:34 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:27:34 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=9 warnings=0
+2025-08-08 02:27:34 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:27:34 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:27:34 [debug    ] Reward calculated              component=reward_function execution_time=0.15250015258789062 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:27:34 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:34 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:34 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:34 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:34 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:34 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:34 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:27:34 [debug    ] Reward calculated              component=reward_function execution_time=0.0016863346099853516 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:27:34 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:27:34 [debug    ] Reward calculated              component=reward_function execution_time=0.15471577644348145 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:27:34 [debug    ] Episode completed              component=trainer episode=2 episode_time=38.41779017448425 problems_solved=0 reward=-0.84 total_problems=8 trainer_type=VERLPPOTrainer
+2025-08-08 02:27:34 [info     ] Episode completed              avg_reward=-0.84 component=trainer episode=2 reward=-0.84 trainer_type=VERLPPOTrainer
+2025-08-08 02:27:34 [info     ] Training progress              avg_reward=-0.84 best_reward=-0.84 component=trainer episode=3 episodes_completed=3 trainer_type=VERLPPOTrainer validation_reward=-0.756
+2025-08-08 02:27:34 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=84
+2025-08-08 02:27:34 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:27:34 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:27:34 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:27:39 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1285 response_time=4.696292161941528
+2025-08-08 02:27:39 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=4.696459054946899 response_length=1285
+2025-08-08 02:27:39 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1271 detected_functions=['remove_duplicates'] estimated_complexity=moderate execution_time=4.696905851364136 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:27:39 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:27:39 [debug    ] Reward calculated              component=reward_function execution_time=0.00016951560974121094 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:27:39 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:27:39 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:27:39 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:27:39 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:27:39 [debug    ] Reward calculated              component=reward_function execution_time=0.1543598175048828 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:27:39 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:39 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:39 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:39 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:39 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:39 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:27:39 [debug    ] Reward calculated              component=reward_function execution_time=0.0014221668243408203 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:27:39 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:27:39 [debug    ] Reward calculated              component=reward_function execution_time=0.15636873245239258 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:27:39 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=50
+2025-08-08 02:27:39 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:27:39 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:27:39 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:27:45 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1111 response_time=6.274187326431274
+2025-08-08 02:27:45 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=6.274350643157959 response_length=1111
+2025-08-08 02:27:45 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1097 detected_functions=['is_prime'] estimated_complexity=moderate execution_time=6.274772882461548 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:27:45 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:27:45 [debug    ] Reward calculated              component=reward_function execution_time=0.0001327991485595703 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:27:45 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:27:45 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:27:45 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:27:45 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:27:45 [debug    ] Reward calculated              component=reward_function execution_time=0.15492701530456543 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:27:45 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:45 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:45 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:45 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:45 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:45 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:45 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:27:45 [debug    ] Reward calculated              component=reward_function execution_time=0.0016717910766601562 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:27:45 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:27:45 [debug    ] Reward calculated              component=reward_function execution_time=0.15712380409240723 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:27:45 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=67
+2025-08-08 02:27:45 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:27:45 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:27:45 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:27:50 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1318 response_time=4.760845184326172
+2025-08-08 02:27:50 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=4.7610182762146 response_length=1318
+2025-08-08 02:27:50 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1304 detected_functions=['fibonacci'] estimated_complexity=moderate execution_time=4.761419773101807 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:27:50 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:27:50 [debug    ] Reward calculated              component=reward_function execution_time=0.000152587890625 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:27:50 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:27:50 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=10 warnings=0
+2025-08-08 02:27:50 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:27:50 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:27:50 [debug    ] Reward calculated              component=reward_function execution_time=0.1532740592956543 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:27:50 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:50 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:50 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:50 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:50 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:50 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:27:50 [debug    ] Reward calculated              component=reward_function execution_time=0.001476287841796875 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:27:50 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:27:50 [debug    ] Reward calculated              component=reward_function execution_time=0.1552901268005371 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:27:50 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=97
+2025-08-08 02:27:50 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:27:50 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:27:50 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:27:54 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1051 response_time=4.217882871627808
+2025-08-08 02:27:54 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=4.218043565750122 response_length=1051
+2025-08-08 02:27:54 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1037 detected_functions=['is_palindrome'] estimated_complexity=moderate execution_time=4.218439817428589 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:27:54 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:27:54 [debug    ] Reward calculated              component=reward_function execution_time=0.00014162063598632812 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:27:54 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:27:54 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=10 warnings=0
+2025-08-08 02:27:55 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:27:55 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:27:55 [debug    ] Reward calculated              component=reward_function execution_time=0.15768814086914062 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:27:55 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:55 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:55 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:55 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:55 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:55 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:55 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:27:55 [debug    ] Reward calculated              component=reward_function execution_time=0.0017375946044921875 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:27:55 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:27:55 [debug    ] Reward calculated              component=reward_function execution_time=0.15996623039245605 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:27:55 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=77
+2025-08-08 02:27:55 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:27:55 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:27:55 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:27:59 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1000 response_time=4.350579261779785
+2025-08-08 02:27:59 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=4.350740194320679 response_length=1000
+2025-08-08 02:27:59 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=986 detected_functions=['even_numbers'] estimated_complexity=moderate execution_time=4.351162910461426 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:27:59 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:27:59 [debug    ] Reward calculated              component=reward_function execution_time=0.0001285076141357422 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:27:59 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:27:59 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=9 warnings=0
+2025-08-08 02:27:59 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:27:59 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:27:59 [debug    ] Reward calculated              component=reward_function execution_time=0.1528024673461914 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:27:59 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:59 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:59 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:59 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:59 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:27:59 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:27:59 [debug    ] Reward calculated              component=reward_function execution_time=0.0014262199401855469 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:27:59 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:27:59 [debug    ] Reward calculated              component=reward_function execution_time=0.15473461151123047 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:27:59 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=62
+2025-08-08 02:27:59 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:27:59 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:27:59 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:28:04 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1037 response_time=5.114325761795044
+2025-08-08 02:28:04 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=5.11449933052063 response_length=1037
+2025-08-08 02:28:04 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1023 detected_functions=['count_vowels'] estimated_complexity=moderate execution_time=5.1148974895477295 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:28:04 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:28:04 [debug    ] Reward calculated              component=reward_function execution_time=0.0001316070556640625 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:28:04 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:28:04 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=9 warnings=0
+2025-08-08 02:28:04 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:28:04 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:28:04 [debug    ] Reward calculated              component=reward_function execution_time=0.1518721580505371 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:28:04 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:04 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:04 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:04 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:04 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:04 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:04 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:28:04 [debug    ] Reward calculated              component=reward_function execution_time=0.001669168472290039 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:28:04 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:28:04 [debug    ] Reward calculated              component=reward_function execution_time=0.15410637855529785 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:28:04 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=67
+2025-08-08 02:28:04 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:28:04 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:28:04 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:28:09 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1204 response_time=4.776005268096924
+2025-08-08 02:28:09 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=4.77616548538208 response_length=1204
+2025-08-08 02:28:09 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1190 detected_functions=['find_minimum'] estimated_complexity=moderate execution_time=4.776557207107544 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:28:09 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:28:09 [debug    ] Reward calculated              component=reward_function execution_time=0.00012874603271484375 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:28:09 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:28:09 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:28:09 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:28:09 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:28:09 [debug    ] Reward calculated              component=reward_function execution_time=0.15253996849060059 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:28:09 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:09 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:09 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:09 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:09 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:09 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:28:09 [debug    ] Reward calculated              component=reward_function execution_time=0.001714944839477539 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:28:09 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:28:09 [debug    ] Reward calculated              component=reward_function execution_time=0.1548774242401123 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:28:09 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=64
+2025-08-08 02:28:09 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:28:09 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:28:09 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:28:13 [info     ] LLM call successful            component=llm_interface provider=openai response_length=761 response_time=3.3016066551208496
+2025-08-08 02:28:13 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=3.301762580871582 response_length=761
+2025-08-08 02:28:13 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=747 detected_functions=['max_of_two'] estimated_complexity=simple execution_time=3.3022818565368652 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:28:13 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:28:13 [debug    ] Reward calculated              component=reward_function execution_time=0.00012946128845214844 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:28:13 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:28:13 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:28:13 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:28:13 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:28:13 [debug    ] Reward calculated              component=reward_function execution_time=0.14852619171142578 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:28:13 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:13 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:13 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:13 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:13 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:13 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:28:13 [debug    ] Reward calculated              component=reward_function execution_time=0.0014564990997314453 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:28:13 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:28:13 [debug    ] Reward calculated              component=reward_function execution_time=0.15051865577697754 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:28:13 [debug    ] Episode completed              component=trainer episode=3 episode_time=38.740952491760254 problems_solved=0 reward=-0.84 total_problems=8 trainer_type=VERLPPOTrainer
+2025-08-08 02:28:13 [info     ] Episode completed              avg_reward=-0.84 component=trainer episode=3 reward=-0.84 trainer_type=VERLPPOTrainer
+2025-08-08 02:28:13 [info     ] Training progress              avg_reward=-0.84 best_reward=-0.84 component=trainer episode=4 episodes_completed=4 trainer_type=VERLPPOTrainer validation_reward=-0.756
+2025-08-08 02:28:13 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=84
+2025-08-08 02:28:13 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:28:13 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:28:13 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:28:19 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1326 response_time=5.8230860233306885
+2025-08-08 02:28:19 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=5.82324481010437 response_length=1326
+2025-08-08 02:28:19 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1312 detected_functions=['remove_duplicates'] estimated_complexity=moderate execution_time=5.823686838150024 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:28:19 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:28:19 [debug    ] Reward calculated              component=reward_function execution_time=0.00012803077697753906 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:28:19 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:28:19 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:28:19 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:28:19 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:28:19 [debug    ] Reward calculated              component=reward_function execution_time=0.15143704414367676 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:28:19 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:19 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:19 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:19 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:19 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:19 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:28:19 [debug    ] Reward calculated              component=reward_function execution_time=0.0014994144439697266 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:28:19 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:28:19 [debug    ] Reward calculated              component=reward_function execution_time=0.15346407890319824 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:28:19 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=61
+2025-08-08 02:28:19 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:28:19 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:28:19 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:28:21 [info     ] LLM call successful            component=llm_interface provider=openai response_length=718 response_time=2.364532232284546
+2025-08-08 02:28:21 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=2.364687204360962 response_length=718
+2025-08-08 02:28:21 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=704 detected_functions=['reverse_string'] estimated_complexity=simple execution_time=2.365051746368408 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:28:21 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:28:21 [debug    ] Reward calculated              component=reward_function execution_time=0.00013446807861328125 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:28:21 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:28:21 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=10 warnings=0
+2025-08-08 02:28:21 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:28:21 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:28:21 [debug    ] Reward calculated              component=reward_function execution_time=0.15295100212097168 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:28:21 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:21 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:21 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:21 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:21 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:21 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:28:21 [debug    ] Reward calculated              component=reward_function execution_time=0.001470804214477539 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:28:21 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:28:21 [debug    ] Reward calculated              component=reward_function execution_time=0.15494203567504883 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:28:21 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=61
+2025-08-08 02:28:21 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:28:21 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:28:21 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:28:25 [info     ] LLM call successful            component=llm_interface provider=openai response_length=874 response_time=3.9314732551574707
+2025-08-08 02:28:25 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=3.931633949279785 response_length=874
+2025-08-08 02:28:25 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=860 detected_functions=['count_words'] estimated_complexity=moderate execution_time=3.932021141052246 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:28:25 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:28:25 [debug    ] Reward calculated              component=reward_function execution_time=0.0001277923583984375 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:28:25 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:28:25 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=9 warnings=0
+2025-08-08 02:28:25 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:28:25 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:28:25 [debug    ] Reward calculated              component=reward_function execution_time=0.15302658081054688 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:28:25 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:25 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:25 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:25 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:25 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:25 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:28:25 [debug    ] Reward calculated              component=reward_function execution_time=0.0014185905456542969 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:28:25 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:28:25 [debug    ] Reward calculated              component=reward_function execution_time=0.1549687385559082 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:28:25 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=97
+2025-08-08 02:28:25 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:28:25 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:28:25 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:28:30 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1064 response_time=4.254582405090332
+2025-08-08 02:28:30 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=4.254743814468384 response_length=1064
+2025-08-08 02:28:30 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1050 detected_functions=['is_palindrome'] estimated_complexity=moderate execution_time=4.255144834518433 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:28:30 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:28:30 [debug    ] Reward calculated              component=reward_function execution_time=0.00013971328735351562 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:28:30 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:28:30 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=9 warnings=0
+2025-08-08 02:28:30 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:28:30 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:28:30 [debug    ] Reward calculated              component=reward_function execution_time=0.15968585014343262 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:28:30 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:30 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:30 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:30 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:30 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:30 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:30 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:28:30 [debug    ] Reward calculated              component=reward_function execution_time=0.001798391342163086 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:28:30 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:28:30 [debug    ] Reward calculated              component=reward_function execution_time=0.16199994087219238 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:28:30 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=67
+2025-08-08 02:28:30 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:28:30 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:28:30 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:28:36 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1222 response_time=6.033299684524536
+2025-08-08 02:28:36 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=6.033458471298218 response_length=1222
+2025-08-08 02:28:36 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1208 detected_functions=['find_minimum'] estimated_complexity=moderate execution_time=6.0338733196258545 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:28:36 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:28:36 [debug    ] Reward calculated              component=reward_function execution_time=0.00015044212341308594 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:28:36 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:28:36 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:28:36 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:28:36 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:28:36 [debug    ] Reward calculated              component=reward_function execution_time=0.15128231048583984 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:28:36 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:36 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:36 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:36 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:36 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:36 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:28:36 [debug    ] Reward calculated              component=reward_function execution_time=0.0014636516571044922 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:28:36 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:28:36 [debug    ] Reward calculated              component=reward_function execution_time=0.1532881259918213 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:28:36 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=73
+2025-08-08 02:28:36 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:28:36 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:28:36 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:28:41 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1096 response_time=4.576556444168091
+2025-08-08 02:28:41 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=4.576720237731934 response_length=1096
+2025-08-08 02:28:41 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1082 detected_functions=['factorial'] estimated_complexity=moderate execution_time=4.577122688293457 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:28:41 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:28:41 [debug    ] Reward calculated              component=reward_function execution_time=0.00013136863708496094 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:28:41 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:28:41 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=9 warnings=0
+2025-08-08 02:28:41 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:28:41 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:28:41 [debug    ] Reward calculated              component=reward_function execution_time=0.1564023494720459 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:28:41 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:41 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:41 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:41 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:41 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:41 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:28:41 [debug    ] Reward calculated              component=reward_function execution_time=0.001486063003540039 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:28:41 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:28:41 [debug    ] Reward calculated              component=reward_function execution_time=0.15840458869934082 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:28:41 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=66
+2025-08-08 02:28:41 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:28:41 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:28:41 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:28:46 [info     ] LLM call successful            component=llm_interface provider=openai response_length=940 response_time=4.945183753967285
+2025-08-08 02:28:46 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=4.945345163345337 response_length=940
+2025-08-08 02:28:46 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=926 detected_functions=['sum_of_numbers'] estimated_complexity=moderate execution_time=4.945761442184448 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:28:46 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:28:46 [debug    ] Reward calculated              component=reward_function execution_time=0.00014209747314453125 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:28:46 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:28:46 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:28:46 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:28:46 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:28:46 [debug    ] Reward calculated              component=reward_function execution_time=0.1539006233215332 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:28:46 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:46 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:46 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:46 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:46 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:46 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:28:46 [debug    ] Reward calculated              component=reward_function execution_time=0.0014047622680664062 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:28:46 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:28:46 [debug    ] Reward calculated              component=reward_function execution_time=0.1558387279510498 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:28:46 [info     ] Starting code generation       agent_id=generator_001 agent_type=code_generator request_length=62
+2025-08-08 02:28:46 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=last_request value_type=str
+2025-08-08 02:28:46 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=target_language value_type=str
+2025-08-08 02:28:46 [info     ] Making LLM call                component=llm_interface max_tokens=2048 message_count=13 provider=openai temperature=0.7
+2025-08-08 02:28:51 [info     ] LLM call successful            component=llm_interface provider=openai response_length=1041 response_time=5.243630409240723
+2025-08-08 02:28:51 [info     ] LLM call successful            agent_id=generator_001 agent_type=code_generator execution_time=5.2437920570373535 response_length=1041
+2025-08-08 02:28:51 [info     ] Code generation completed      agent_id=generator_001 agent_type=code_generator code_length=1027 detected_functions=['count_vowels'] estimated_complexity=moderate execution_time=5.244202613830566 has_explanation=False include_tests=False language=python style=clean
+2025-08-08 02:28:51 [warning  ] Executor agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=CorrectnessReward
+2025-08-08 02:28:51 [debug    ] Reward calculated              component=reward_function execution_time=0.0001480579376220703 function_type=CorrectnessReward normalized_reward=0.0 raw_reward=0.0 weighted_reward=0.0
+2025-08-08 02:28:51 [warning  ] Reviewer agent evaluation failed: 'NoneType' object has no attribute 'process_request' component=reward_function function_type=StyleReward
+2025-08-08 02:28:51 [debug    ] Ruff evaluation                component=reward_function errors=0 function_type=StyleReward score=1.0 total_issues=8 warnings=0
+2025-08-08 02:28:51 [debug    ] MyPy evaluation                component=reward_function function_type=StyleReward has_type_hints=True score=0.8 type_errors=1
+2025-08-08 02:28:51 [debug    ] Style evaluation completed     component=reward_function final_score=0.8 function_type=StyleReward scores={'reviewer': None, 'ruff': 1.0, 'mypy': 0.8, 'complexity': 0.2}
+2025-08-08 02:28:51 [debug    ] Reward calculated              component=reward_function execution_time=0.15299224853515625 function_type=StyleReward normalized_reward=0.6000000000000001 raw_reward=0.8 weighted_reward=0.6000000000000001
+2025-08-08 02:28:51 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:51 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:51 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:51 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:51 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:51 [debug    ] Performance measurement failed: Code execution failed: invalid syntax (<string>, line 1) component=reward_function function_type=EfficiencyReward
+2025-08-08 02:28:51 [debug    ] Efficiency evaluation completed avg_memory_score=0.3 avg_time_score=0.3 component=reward_function efficiency_score=0.3 function_type=EfficiencyReward
+2025-08-08 02:28:51 [debug    ] Reward calculated              component=reward_function execution_time=0.0018610954284667969 function_type=EfficiencyReward normalized_reward=-0.4 raw_reward=0.3 weighted_reward=-0.4
+2025-08-08 02:28:51 [debug    ] Composite reward calculated    component=reward_function composite=0.08000000000000002 correctness=0.0 efficiency=-0.4 function_type=CompositeReward style=0.6000000000000001 weights={'correctness': 0.7, 'style': 0.2, 'efficiency': 0.1}
+2025-08-08 02:28:51 [debug    ] Reward calculated              component=reward_function execution_time=0.15546917915344238 function_type=CompositeReward normalized_reward=-0.84 raw_reward=0.08000000000000002 weighted_reward=-0.84
+2025-08-08 02:28:51 [debug    ] Episode completed              component=trainer episode=4 episode_time=38.42672157287598 problems_solved=0 reward=-0.84 total_problems=8 trainer_type=VERLPPOTrainer
+2025-08-08 02:28:51 [info     ] Episode completed              avg_reward=-0.8400000000000001 component=trainer episode=4 reward=-0.84 trainer_type=VERLPPOTrainer
+2025-08-08 02:28:51 [info     ] Training progress              avg_reward=-0.8400000000000001 best_reward=-0.84 component=trainer episode=5 episodes_completed=5 trainer_type=VERLPPOTrainer validation_reward=-0.7560000000000001
+2025-08-08 02:28:51 [info     ] Checkpoint saved               component=trainer path=checkpoints/checkpoint_episode_4.json trainer_type=VERLPPOTrainer
+2025-08-08 02:28:51 [debug    ] State updated                  agent_id=generator_001 agent_type=code_generator key=training_mode value_type=bool
+2025-08-08 02:28:51 [info     ] Training metrics updated       component=supervisor final_reward=-0.8400000000000001 successful_sessions=1 total_sessions=1
+2025-08-08 02:28:51 [info     ] VERL training completed        component=supervisor episodes_completed=5.0 final_reward=-0.8400000000000001 success=True
+✅ Demo training completed!
+   Final reward: -0.840
+2025-08-08 02:28:51 [info     ] Shutting down supervisor       component=supervisor
+2025-08-08 02:28:51 [info     ] Agent shutdown                 agent=generator component=supervisor
+2025-08-08 02:28:51 [info     ] Agent shutdown                 agent=reviewer component=supervisor
+2025-08-08 02:28:51 [info     ] Agent shutdown                 agent=executor component=supervisor
+2025-08-08 02:28:51 [info     ] LLM interface shutdown         component=llm_interface provider=openai
+2025-08-08 02:28:51 [info     ] Supervisor shutdown completed  component=supervisor
