@@ -99,8 +99,31 @@ training = [
     "wandb>=0.15.0",
 ]
 
+phase3 = [
+    # Distributed training
+    "ray[default,train,tune]>=2.8.0",    # Distributed computing with Ray Train and Ray Tune
+    "torch>=2.1.0",                      # PyTorch with FSDP support
+    "transformers>=4.35.0",              # HuggingFace models
+    "accelerate>=0.24.0",                # FSDP integration
+    
+    # Evaluation benchmarks
+    "datasets>=2.15.0",                  # Benchmark datasets
+    "evaluate>=0.4.0",                   # Evaluation metrics
+    "human-eval>=1.0.0",                 # HumanEval benchmark (if available via pip)
+    
+    # Monitoring and observability
+    "wandb>=0.16.0",                     # Experiment tracking
+    "mlflow>=2.8.0",                     # ML lifecycle management
+    
+    # Production deployment
+    "fastapi>=0.104.0",                  # Model serving API
+    "uvicorn>=0.24.0",                   # ASGI server
+    "scipy>=1.11.0",                     # Statistical analysis for A/B testing
+    "GPUtil>=1.4.0",                     # GPU monitoring
+]
+
 all = [
-    "coding-framework[dev,verl,training]"
+    "coding-framework[dev,verl,training,phase3]"
 ]
 
 [project.urls]

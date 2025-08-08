@@ -26,6 +26,16 @@ class VERLConfig(BaseModel):
     max_grad_norm: float = 1.0
     entropy_coef: float = 0.01
     value_loss_coef: float = 0.5
+    
+    # Distributed training settings
+    enable_distributed: bool = False
+    algorithm: str = "ppo"  # ppo, grpo, remax
+    num_gpus: int = 1
+    use_ray: bool = False
+    
+    # Advanced VERL features
+    enable_multi_turn: bool = False
+    max_conversation_turns: int = 5
 
 
 class VERLPPOTrainer(BaseTrainer):
