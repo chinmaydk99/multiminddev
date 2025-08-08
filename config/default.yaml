@@ -1,0 +1,65 @@
+# Default configuration for Multi-Agent Coding Framework
+version: "0.1.0"
+environment: "development"
+debug: false
+
+# LLM Configuration
+llm:
+  provider: "openai"
+  model: "gpt-4o-mini"
+  temperature: 0.7
+  max_tokens: 2048
+  timeout: 60
+
+# Agent Configurations
+agents:
+  generator:
+    temperature: 0.7
+    include_comments: true
+    include_docstrings: true
+    optimize_for_readability: true
+    default_language: "python"
+  
+  reviewer:
+    temperature: 0.3
+    focus_areas: ["correctness", "style", "performance", "security", "maintainability"]
+    include_suggestions: true
+    include_examples: true
+    security_focused: true
+  
+  executor:
+    execution_timeout: 30
+    sandboxed_execution: true
+    network_disabled: true
+
+# Workflow Configuration
+workflow:
+  max_iterations: 3
+  human_in_loop: false
+  target_review_score: 80.0
+  min_execution_score: 50.0
+
+# Training Configuration
+training:
+  data_path: "./data/training_problems"
+  algorithm: "ppo"
+  episodes: 100
+  batch_size: 8
+  learning_rate: 0.00001
+  reward_weights:
+    correctness: 0.7
+    style: 0.2
+    efficiency: 0.1
+
+# Logging Configuration  
+logging:
+  level: "INFO"
+  format: "json"
+  include_timestamps: true
+  include_context: true
+
+# Security Configuration
+security:
+  enable_security_scanning: true
+  sandbox_all_execution: true
+  network_isolation: true

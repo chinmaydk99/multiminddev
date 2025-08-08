@@ -155,6 +155,10 @@ Be constructive, specific, and provide examples where helpful."""
                 "review_categories": self._categorize_issues(structured_review["issues"]),
                 "language": self._detect_language(code_info["code"]),
             }
+            
+            # Add context information to metadata if available
+            if context:
+                metadata.update(context)
 
             # Add to conversation history
             self.add_to_history(HumanMessage(content=request))
@@ -408,7 +412,7 @@ Be constructive, specific, and provide examples where helpful."""
             word in description_lower for word in ["bug", "error", "wrong", "incorrect", "logic"]
         ):
             return "correctness"
-        elif any(word in description_lower for word in ["style", "format", "naming", "convention"]):
+        elif any(word in description_lower for word in ["style", "format", "naming", "convention", "descriptive", "variable name", "method name"]):
             return "style"
         elif any(
             word in description_lower

@@ -38,14 +38,15 @@ class CompositeReward(BaseRewardFunction):
             style_kwargs: Arguments for StyleReward initialization
             efficiency_kwargs: Arguments for EfficiencyReward initialization
         """
+        # Initialize parent class first (sets up logger)
+        super().__init__(weight=1.0, normalize_range=(-1.0, 1.0))
+
         # Default weights
         default_weights = {"correctness": 0.7, "style": 0.2, "efficiency": 0.1}
         self.weights = weights or default_weights
 
-        # Validate weights
+        # Validate weights (after logger is initialized)
         self._validate_weights()
-
-        super().__init__(weight=1.0, normalize_range=(-1.0, 1.0))
 
         # Initialize individual reward functions
         self.correctness_reward = CorrectnessReward(

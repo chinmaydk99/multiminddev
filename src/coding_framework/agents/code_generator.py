@@ -113,6 +113,10 @@ Always structure your response as:
                 "detected_functions": self._detect_functions(code_info["code"], language),
                 "estimated_complexity": self._estimate_complexity(code_info["code"]),
             }
+            
+            # Add context information to metadata if available
+            if context:
+                metadata.update(context)
 
             # Add to conversation history
             self.add_to_history(HumanMessage(content=request))

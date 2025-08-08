@@ -209,5 +209,9 @@ exclude_lines = [
 
 [dependency-groups]
 dev = [
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.1.0",
+    "pytest-cov>=6.2.1",
+    "python-dotenv>=1.1.1",
     "ruff>=0.12.8",
 ]

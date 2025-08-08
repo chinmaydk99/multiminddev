@@ -16,7 +16,7 @@ import pytest
 import pytest_asyncio
 from pydantic import BaseModel
 
-from src.coding_framework.utils.config import Config, LLMConfig, AgentConfig
+from src.coding_framework.utils.config import Config, LLMConfig, AgentConfig, WorkflowConfig
 from src.coding_framework.utils.llm_interface import LLMInterface
 from src.coding_framework.agents import (
     CodeGeneratorAgent,
@@ -76,12 +76,12 @@ def test_config() -> Config:
             max_tokens=1000,
             timeout=30,
         ),
-        workflow={
-            "max_iterations": 2,
-            "human_in_loop": False,
-            "target_review_score": 70.0,
-            "min_execution_score": 50.0,
-        }
+        workflow=WorkflowConfig(
+            max_iterations=2,
+            human_in_loop=False,
+            target_review_score=70.0,
+            min_execution_score=50.0,
+        )
     )
 
 

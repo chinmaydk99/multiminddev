@@ -221,11 +221,13 @@ class Config(BaseSettings):
     max_concurrent_requests: int = Field(default=10, gt=0)
     request_timeout: int = Field(default=300, gt=0)
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
-        env_nested_delimiter = "__"  # For nested config like LLM__API_KEY
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "case_sensitive": False,
+        "env_nested_delimiter": "__",  # For nested config like LLM__API_KEY
+        "extra": "ignore"  # Allow extra fields from env vars
+    }
 
 
 def load_config(config_path: Optional[str] = None) -> Config:

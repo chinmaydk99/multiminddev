@@ -208,8 +208,17 @@ class EfficiencyReward(BaseRewardFunction):
         Returns:
             Execution result
         """
-        # Create execution environment
-        exec_globals = {"__builtins__": __builtins__}
+        # Create execution environment with typing imports
+        exec_globals = {
+            "__builtins__": __builtins__,
+            "List": list,
+            "Dict": dict,
+            "Set": set,
+            "Tuple": tuple,
+            "Optional": type(None),
+            "Union": type(None),  # Simplified for basic use
+            "Any": object,
+        }
         exec_locals = {}
 
         try:

@@ -31,7 +31,8 @@
       "Bash(uv add:*)",
       "Bash(uv run ruff check:*)",
       "Bash(uv run ruff:*)",
-      "Bash(uv run:*)"
+      "Bash(uv run:*)",
+      "Bash(uv sync:*)"
     ],
     "deny": []
   }

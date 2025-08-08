@@ -8,9 +8,15 @@ VERL PPO with basic reward functions on simple coding problems.
 import asyncio
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
+import os
 
 # Add src to path to import the framework
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
+
+# Load environment variables
+env_path = Path(__file__).parent.parent.parent / ".env"
+load_dotenv(env_path)
 
 from coding_framework.orchestration import CodingSupervisor
 from coding_framework.utils import load_config
@@ -19,7 +25,7 @@ from coding_framework.utils import load_config
 async def train_coding_agents():
     """Complete example of VERL training loop."""
 
-    print("🤖 VERL + LangGraph Multi-Agent Coding Framework")
+    print("VERL + LangGraph Multi-Agent Coding Framework")
     print("=" * 60)
     print("Starting basic PPO training example")
     print("")
@@ -28,19 +34,19 @@ async def train_coding_agents():
         # 1. Load configuration optimized for training
         config_path = Path(__file__).parent / "configs" / "ppo_basic.yaml"
         if not config_path.exists():
-            print(f"⚠️  Configuration file not found: {config_path}")
+            print(f"WARNING: Configuration file not found: {config_path}")
             print("Using default configuration...")
             config_path = "config/default.yaml"  # Fallback to default
 
-        print(f"📁 Loading configuration from: {config_path}")
+        print(f"Loading configuration from: {config_path}")
         config = load_config(str(config_path))
 
         # 2. Initialize supervisor and training components
-        print("🔧 Initializing CodingSupervisor...")
+        print("Initializing CodingSupervisor...")
         supervisor = CodingSupervisor(config)
         await supervisor.initialize()
 
-        print("✅ Supervisor initialized successfully")
+        print("Supervisor initialized successfully")
         print(f"   - Agents: {list(supervisor.agents.keys())}")
         print("")
 
@@ -48,7 +54,7 @@ async def train_coding_agents():
         episodes = 10  # Small number for demo
         algorithm = "ppo"
 
-        print(f"🚀 Starting VERL {algorithm.upper()} training...")
+        print(f"Starting VERL {algorithm.upper()} training...")
         print(f"   - Episodes: {episodes}")
         print(f"   - Algorithm: {algorithm}")
         print(f"   - Data path: {config.training.data_path}")
@@ -58,11 +64,11 @@ async def train_coding_agents():
         training_results = await supervisor.train_agents(algorithm=algorithm, episodes=episodes)
 
         # 4. Display training results
-        print("📊 Training Results:")
+        print("Training Results:")
         print("=" * 40)
 
         if training_results.get("success", False):
-            print("✅ Training completed successfully!")
+            print("SUCCESS: Training completed successfully!")
 
             metrics = training_results.get("metrics", {})
             print(f"   • Final reward: {metrics.get('final_reward', 'N/A'):.3f}")
@@ -74,7 +80,7 @@ async def train_coding_agents():
                 print(f"   • Convergence episode: {metrics['convergence_episode']}")
 
         else:
-            print("❌ Training failed!")
+            print("ERROR: Training failed!")
             error = training_results.get("error", "Unknown error")
             print(f"   Error: {error}")
             return False
@@ -82,7 +88,7 @@ async def train_coding_agents():
         print("")
 
         # 5. Test trained agent on validation problems
-        print("🧪 Testing trained agent on validation problem...")
+        print("Testing Testing trained agent on validation problem...")
 
         test_problem = "Write a function to reverse a string"
         print(f"   Problem: {test_problem}")
@@ -92,7 +98,7 @@ async def train_coding_agents():
         )
 
         if validation_results.get("success", False):
-            print("✅ Validation test passed!")
+            print("SUCCESS: Validation test passed!")
 
             code = validation_results.get("code", "")
             if code:
@@ -110,15 +116,15 @@ async def train_coding_agents():
 
             execution = validation_results.get("execution", {})
             if isinstance(execution, dict):
-                print(f"   Execution: {'✅ Success' if execution.get('success') else '❌ Failed'}")
+                print(f"   Execution: {'SUCCESS: Success' if execution.get('success') else 'ERROR: Failed'}")
 
         else:
-            print("❌ Validation test failed!")
+            print("ERROR: Validation test failed!")
             error = validation_results.get("error", "Unknown error")
             print(f"   Error: {error}")
 
         print("")
-        print("🎯 Training Summary:")
+        print("Testing Training Summary:")
         print("=" * 40)
 
         # Get final performance metrics
@@ -135,7 +141,7 @@ async def train_coding_agents():
         return True
 
     except Exception as e:
-        print(f"❌ Training example failed: {e}")
+        print(f"ERROR: Training example failed: {e}")
         import traceback
 
         traceback.print_exc()
@@ -146,14 +152,14 @@ async def train_coding_agents():
         if "supervisor" in locals():
             try:
                 await supervisor.shutdown()
-                print("🔌 Supervisor shutdown completed")
+                print("Supervisor shutdown completed")
             except Exception as e:
-                print(f"⚠️  Shutdown warning: {e}")
+                print(f"Testing  Shutdown warning: {e}")
 
 
 async def quick_demo():
     """Quick demo with minimal training."""
-    print("🚀 Quick VERL Training Demo (5 episodes)")
+    print("Testing Quick VERL Training Demo (5 episodes)")
     print("=" * 50)
 
     try:
@@ -169,17 +175,17 @@ async def quick_demo():
         training_results = await supervisor.train_agents(algorithm="ppo", episodes=5)
 
         if training_results.get("success"):
-            print("✅ Demo training completed!")
+            print("SUCCESS: Demo training completed!")
             metrics = training_results.get("metrics", {})
             print(f"   Final reward: {metrics.get('final_reward', 0.0):.3f}")
         else:
-            print("❌ Demo training failed!")
+            print("ERROR: Demo training failed!")
             print(f"   Error: {training_results.get('error', 'Unknown')}")
 
         await supervisor.shutdown()
 
     except Exception as e:
-        print(f"❌ Demo failed: {e}")
+        print(f"ERROR: Demo failed: {e}")
 
 
 def main():

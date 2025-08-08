@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Quick test script to verify our fixes work.
+Simple test script to verify our fixes work without requiring LLM.
 """
 import asyncio
 import sys
@@ -9,13 +9,11 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from coding_framework.agents import CodeGeneratorAgent
-from coding_framework.training.reward_functions import CorrectnessReward, StyleReward, EfficiencyReward
-from coding_framework.utils.config import Config
-from coding_framework.utils.llm_interface import LLMInterface
+from coding_framework.agents.code_generator import CodeGeneratorAgent
+from coding_framework.training.reward_functions import CorrectnessReward, EfficiencyReward
 
 
-async def test_code_extraction():
+def test_code_extraction():
     """Test code extraction from LLM response."""
     print("Testing code extraction...")
     
@@ -29,15 +27,8 @@ def reverse_string(s):
 
 This function uses Python's slice notation to reverse the string efficiently."""
     
-    config = Config()
-    llm_interface = LLMInterface(config.llm)
-    await llm_interface.initialize()
-    
-    agent = CodeGeneratorAgent(
-        config=config.agents.generator,
-        llm_interface=llm_interface,
-        agent_id="test_generator"
-    )
+    # Create mock agent (don't need full initialization)
+    agent = CodeGeneratorAgent.__new__(CodeGeneratorAgent)
     
     # Test code extraction
     code_info = agent._extract_code_from_response(mock_response)
@@ -79,6 +70,8 @@ async def test_reward_functions():
         print(f"EfficiencyReward: {reward}")
     except Exception as e:
         print(f"EfficiencyReward failed: {e}")
+        import traceback
+        traceback.print_exc()
     
     # Test CorrectnessReward  
     print("Testing CorrectnessReward...")
@@ -90,6 +83,8 @@ async def test_reward_functions():
         print(f"CorrectnessReward: {reward}")
     except Exception as e:
         print(f"CorrectnessReward failed: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 async def main():
@@ -98,7 +93,7 @@ async def main():
     print("=" * 50)
     
     try:
-        await test_code_extraction()
+        test_code_extraction()
         await test_reward_functions()
         print("\nAll tests completed!")
     except Exception as e:

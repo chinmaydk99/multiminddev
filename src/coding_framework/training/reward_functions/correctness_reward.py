@@ -261,7 +261,7 @@ class CorrectnessReward(BaseRewardFunction):
         Returns:
             Execution result
         """
-        # Create a restricted execution environment
+        # Create a restricted execution environment with typing support
         safe_globals = {
             "__builtins__": {
                 "abs": abs,
@@ -285,7 +285,15 @@ class CorrectnessReward(BaseRewardFunction):
                 "sum": sum,
                 "tuple": tuple,
                 "zip": zip,
-            }
+            },
+            # Add typing support for LLM-generated code
+            "List": list,
+            "Dict": dict,
+            "Set": set,
+            "Tuple": tuple,
+            "Optional": type(None),
+            "Union": type(None),  # Simplified for basic use
+            "Any": object,
         }
         safe_locals = {}
 
@@ -332,25 +340,35 @@ class CorrectnessReward(BaseRewardFunction):
             True if outputs match, False otherwise
         """
         try:
+            # Add detailed debugging for comparison
+            self.logger.debug(f"Comparing outputs: actual={repr(actual)} (type: {type(actual)}) vs expected={repr(expected)} (type: {type(expected)})")
+            
             # Handle different types of comparisons
             if type(actual) != type(expected):
                 # Try converting to same type
                 if isinstance(expected, str) and not isinstance(actual, str):
                     actual = str(actual)
+                    self.logger.debug(f"Converted actual to string: {repr(actual)}")
                 elif isinstance(expected, (int, float)) and isinstance(actual, (int, float)):
                     # Allow int/float comparison
                     pass
                 else:
+                    self.logger.debug(f"Type mismatch: {type(actual)} vs {type(expected)}")
                     return False
 
             # Special handling for floating point comparison
             if isinstance(expected, float) and isinstance(actual, float):
-                return abs(actual - expected) < 1e-6
+                match = abs(actual - expected) < 1e-6
+                self.logger.debug(f"Float comparison result: {match}")
+                return match
 
             # Direct comparison
-            return actual == expected
+            match = actual == expected
+            self.logger.debug(f"Direct comparison result: {match}")
+            return match
 
-        except Exception:
+        except Exception as e:
+            self.logger.debug(f"Comparison failed with exception: {e}")
             return False
 
     async def _get_detailed_metrics(

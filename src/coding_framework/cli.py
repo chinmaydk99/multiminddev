@@ -10,6 +10,10 @@ import json
 import sys
 from pathlib import Path
 from typing import Any, Optional
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 import click
 import structlog
