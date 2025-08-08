@@ -1,7 +1,7 @@
 """
 VERL + LangGraph Multi-Agent Coding Framework
 
-A sophisticated multi-agent system that combines LangGraph orchestration with VERL 
+A sophisticated multi-agent system that combines LangGraph orchestration with VERL
 reinforcement learning for intelligent code generation, review, and execution.
 """
 
@@ -11,17 +11,17 @@ __email__ = "multiminddev@example.com"
 
 from .agents import (
     BaseAgent,
-    CodeGeneratorAgent, 
-    CodeReviewerAgent,
     CodeExecutorAgent,
+    CodeGeneratorAgent,
+    CodeReviewerAgent,
 )
 from .orchestration import CodingSupervisor
-from .utils import setup_logging, load_config
+from .utils import load_config, setup_logging
 
 __all__ = [
     "BaseAgent",
     "CodeGeneratorAgent",
-    "CodeReviewerAgent", 
+    "CodeReviewerAgent",
     "CodeExecutorAgent",
     "CodingSupervisor",
     "setup_logging",

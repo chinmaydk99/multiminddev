@@ -18,7 +18,7 @@ def setup_logging(
 ) -> None:
     """
     Set up structured logging for the application.
-    
+
     Args:
         level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
         verbose: Enable verbose output
@@ -27,13 +27,13 @@ def setup_logging(
     """
     # Convert level string to logging level
     log_level = getattr(logging, level.upper(), logging.INFO)
-    
+
     if verbose:
         log_level = logging.DEBUG
-    
+
     # Configure timestamper
     timestamper = structlog.processors.TimeStamper(fmt="ISO")
-    
+
     # Configure processors based on format type
     if format_type == "json":
         processors = [
@@ -57,7 +57,7 @@ def setup_logging(
             structlog.processors.UnicodeDecoder(),
             structlog.dev.ConsoleRenderer(colors=True),
         ]
-    
+
     # Configure structlog
     structlog.configure(
         processors=processors,
@@ -65,31 +65,31 @@ def setup_logging(
         logger_factory=structlog.stdlib.LoggerFactory(),
         cache_logger_on_first_use=True,
     )
-    
+
     # Configure standard library logging
     handlers = []
-    
+
     # Console handler
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(log_level)
     handlers.append(console_handler)
-    
+
     # File handler if specified
     if log_file:
         log_path = Path(log_file)
         log_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         file_handler = logging.FileHandler(log_file)
         file_handler.setLevel(log_level)
         handlers.append(file_handler)
-    
+
     # Configure root logger
     logging.basicConfig(
         handlers=handlers,
         level=log_level,
         format="%(message)s",  # structlog handles formatting
     )
-    
+
     # Silence noisy third-party loggers
     _silence_noisy_loggers()
 
@@ -98,12 +98,12 @@ def _silence_noisy_loggers() -> None:
     """Silence overly verbose third-party loggers."""
     noisy_loggers = [
         "httpx",
-        "httpcore", 
+        "httpcore",
         "urllib3",
         "docker",
         "ray",
         "wandb",
     ]
-    
+
     for logger_name in noisy_loggers:
         logging.getLogger(logger_name).setLevel(logging.WARNING)

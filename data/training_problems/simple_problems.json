@@ -1,0 +1,230 @@
+[
+  {
+    "id": "reverse_string",
+    "problem": "Write a function that takes a string and returns it reversed.",
+    "difficulty": "easy",
+    "test_cases": [
+      {"input": "hello", "expected_output": "olleh"},
+      {"input": "world", "expected_output": "dlrow"},
+      {"input": "", "expected_output": ""},
+      {"input": "a", "expected_output": "a"},
+      {"input": "Python", "expected_output": "nohtyP"}
+    ],
+    "solution": "def reverse_string(s: str) -> str:\n    return s[::-1]",
+    "tags": ["string", "basic", "slicing"],
+    "language": "python"
+  },
+  {
+    "id": "add_numbers",
+    "problem": "Write a function that takes two numbers and returns their sum.",
+    "difficulty": "easy",
+    "test_cases": [
+      {"input": [2, 3], "expected_output": 5},
+      {"input": [0, 0], "expected_output": 0},
+      {"input": [-1, 1], "expected_output": 0},
+      {"input": [10, -5], "expected_output": 5},
+      {"input": [100, 200], "expected_output": 300}
+    ],
+    "solution": "def add_numbers(a: int, b: int) -> int:\n    return a + b",
+    "tags": ["arithmetic", "basic"],
+    "language": "python"
+  },
+  {
+    "id": "find_maximum",
+    "problem": "Write a function that takes two numbers and returns the maximum.",
+    "difficulty": "easy",
+    "test_cases": [
+      {"input": [2, 3], "expected_output": 3},
+      {"input": [5, 5], "expected_output": 5},
+      {"input": [-1, -2], "expected_output": -1},
+      {"input": [0, 10], "expected_output": 10},
+      {"input": [-10, 5], "expected_output": 5}
+    ],
+    "solution": "def find_maximum(a: int, b: int) -> int:\n    return max(a, b)",
+    "tags": ["comparison", "basic"],
+    "language": "python"
+  },
+  {
+    "id": "count_vowels",
+    "problem": "Write a function that counts the number of vowels in a string.",
+    "difficulty": "easy",
+    "test_cases": [
+      {"input": "hello", "expected_output": 2},
+      {"input": "world", "expected_output": 1},
+      {"input": "Python", "expected_output": 1},
+      {"input": "aeiou", "expected_output": 5},
+      {"input": "xyz", "expected_output": 0},
+      {"input": "", "expected_output": 0}
+    ],
+    "solution": "def count_vowels(s: str) -> int:\n    return sum(1 for char in s.lower() if char in 'aeiou')",
+    "tags": ["string", "counting", "loops"],
+    "language": "python"
+  },
+  {
+    "id": "is_palindrome",
+    "problem": "Write a function that checks if a string is a palindrome (reads the same forwards and backwards).",
+    "difficulty": "easy",
+    "test_cases": [
+      {"input": "racecar", "expected_output": true},
+      {"input": "hello", "expected_output": false},
+      {"input": "a", "expected_output": true},
+      {"input": "", "expected_output": true},
+      {"input": "madam", "expected_output": true},
+      {"input": "Python", "expected_output": false}
+    ],
+    "solution": "def is_palindrome(s: str) -> bool:\n    return s.lower() == s.lower()[::-1]",
+    "tags": ["string", "palindrome", "comparison"],
+    "language": "python"
+  },
+  {
+    "id": "factorial",
+    "problem": "Write a function that calculates the factorial of a non-negative integer.",
+    "difficulty": "easy",
+    "test_cases": [
+      {"input": 0, "expected_output": 1},
+      {"input": 1, "expected_output": 1},
+      {"input": 5, "expected_output": 120},
+      {"input": 3, "expected_output": 6},
+      {"input": 4, "expected_output": 24}
+    ],
+    "solution": "def factorial(n: int) -> int:\n    if n <= 1:\n        return 1\n    return n * factorial(n - 1)",
+    "tags": ["recursion", "mathematics", "factorial"],
+    "language": "python"
+  },
+  {
+    "id": "sum_list",
+    "problem": "Write a function that calculates the sum of all numbers in a list.",
+    "difficulty": "easy",
+    "test_cases": [
+      {"input": [1, 2, 3, 4, 5], "expected_output": 15},
+      {"input": [], "expected_output": 0},
+      {"input": [0], "expected_output": 0},
+      {"input": [-1, 1], "expected_output": 0},
+      {"input": [10, -5, 3], "expected_output": 8}
+    ],
+    "solution": "def sum_list(numbers: list) -> int:\n    return sum(numbers)",
+    "tags": ["list", "arithmetic", "built-in"],
+    "language": "python"
+  },
+  {
+    "id": "even_numbers",
+    "problem": "Write a function that returns a list of even numbers from 0 to n (inclusive).",
+    "difficulty": "easy",
+    "test_cases": [
+      {"input": 10, "expected_output": [0, 2, 4, 6, 8, 10]},
+      {"input": 0, "expected_output": [0]},
+      {"input": 1, "expected_output": [0]},
+      {"input": 5, "expected_output": [0, 2, 4]},
+      {"input": 8, "expected_output": [0, 2, 4, 6, 8]}
+    ],
+    "solution": "def even_numbers(n: int) -> list:\n    return [i for i in range(n + 1) if i % 2 == 0]",
+    "tags": ["list", "comprehension", "even", "range"],
+    "language": "python"
+  },
+  {
+    "id": "fibonacci",
+    "problem": "Write a function that returns the nth Fibonacci number (0-indexed).",
+    "difficulty": "medium",
+    "test_cases": [
+      {"input": 0, "expected_output": 0},
+      {"input": 1, "expected_output": 1},
+      {"input": 2, "expected_output": 1},
+      {"input": 5, "expected_output": 5},
+      {"input": 10, "expected_output": 55}
+    ],
+    "solution": "def fibonacci(n: int) -> int:\n    if n <= 1:\n        return n\n    return fibonacci(n - 1) + fibonacci(n - 2)",
+    "tags": ["recursion", "fibonacci", "mathematics"],
+    "language": "python"
+  },
+  {
+    "id": "reverse_list",
+    "problem": "Write a function that reverses a list in place and returns it.",
+    "difficulty": "easy",
+    "test_cases": [
+      {"input": [1, 2, 3, 4, 5], "expected_output": [5, 4, 3, 2, 1]},
+      {"input": [], "expected_output": []},
+      {"input": [1], "expected_output": [1]},
+      {"input": [1, 2], "expected_output": [2, 1]},
+      {"input": ["a", "b", "c"], "expected_output": ["c", "b", "a"]}
+    ],
+    "solution": "def reverse_list(lst: list) -> list:\n    return lst[::-1]",
+    "tags": ["list", "reverse", "slicing"],
+    "language": "python"
+  },
+  {
+    "id": "find_minimum",
+    "problem": "Write a function that finds the minimum value in a list of numbers.",
+    "difficulty": "easy",
+    "test_cases": [
+      {"input": [1, 2, 3, 4, 5], "expected_output": 1},
+      {"input": [5, 4, 3, 2, 1], "expected_output": 1},
+      {"input": [0], "expected_output": 0},
+      {"input": [-1, -5, -3], "expected_output": -5},
+      {"input": [10, 5, 8, 3, 9], "expected_output": 3}
+    ],
+    "solution": "def find_minimum(numbers: list) -> int:\n    return min(numbers)",
+    "tags": ["list", "minimum", "built-in"],
+    "language": "python"
+  },
+  {
+    "id": "capitalize_words",
+    "problem": "Write a function that capitalizes the first letter of each word in a string.",
+    "difficulty": "easy",
+    "test_cases": [
+      {"input": "hello world", "expected_output": "Hello World"},
+      {"input": "python programming", "expected_output": "Python Programming"},
+      {"input": "a", "expected_output": "A"},
+      {"input": "", "expected_output": ""},
+      {"input": "the quick brown fox", "expected_output": "The Quick Brown Fox"}
+    ],
+    "solution": "def capitalize_words(s: str) -> str:\n    return s.title()",
+    "tags": ["string", "capitalization", "built-in"],
+    "language": "python"
+  },
+  {
+    "id": "count_words",
+    "problem": "Write a function that counts the number of words in a string.",
+    "difficulty": "easy",
+    "test_cases": [
+      {"input": "hello world", "expected_output": 2},
+      {"input": "Python is awesome", "expected_output": 3},
+      {"input": "a", "expected_output": 1},
+      {"input": "", "expected_output": 0},
+      {"input": "  multiple   spaces  ", "expected_output": 2}
+    ],
+    "solution": "def count_words(s: str) -> int:\n    return len(s.split()) if s.strip() else 0",
+    "tags": ["string", "counting", "split"],
+    "language": "python"
+  },
+  {
+    "id": "remove_duplicates",
+    "problem": "Write a function that removes duplicate elements from a list while preserving order.",
+    "difficulty": "medium",
+    "test_cases": [
+      {"input": [1, 2, 2, 3, 4, 4, 5], "expected_output": [1, 2, 3, 4, 5]},
+      {"input": [1, 1, 1], "expected_output": [1]},
+      {"input": [], "expected_output": []},
+      {"input": [1], "expected_output": [1]},
+      {"input": [1, 2, 1, 3, 2], "expected_output": [1, 2, 3]}
+    ],
+    "solution": "def remove_duplicates(lst: list) -> list:\n    seen = set()\n    result = []\n    for item in lst:\n        if item not in seen:\n            seen.add(item)\n            result.append(item)\n    return result",
+    "tags": ["list", "duplicates", "set", "order"],
+    "language": "python"
+  },
+  {
+    "id": "is_prime",
+    "problem": "Write a function that checks if a number is prime.",
+    "difficulty": "medium",
+    "test_cases": [
+      {"input": 2, "expected_output": true},
+      {"input": 3, "expected_output": true},
+      {"input": 4, "expected_output": false},
+      {"input": 17, "expected_output": true},
+      {"input": 1, "expected_output": false},
+      {"input": 0, "expected_output": false}
+    ],
+    "solution": "def is_prime(n: int) -> bool:\n    if n < 2:\n        return False\n    for i in range(2, int(n ** 0.5) + 1):\n        if n % i == 0:\n            return False\n    return True",
+    "tags": ["mathematics", "prime", "algorithm"],
+    "language": "python"
+  }
+]

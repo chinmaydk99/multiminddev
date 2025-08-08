@@ -1,0 +1,100 @@
+[
+  {
+    "id": "string_length",
+    "problem": "Write a function that returns the length of a string.",
+    "difficulty": "easy",
+    "test_cases": [
+      {"input": "hello", "expected_output": 5},
+      {"input": "", "expected_output": 0},
+      {"input": "Python", "expected_output": 6},
+      {"input": "a", "expected_output": 1}
+    ],
+    "solution": "def string_length(s: str) -> int:\n    return len(s)",
+    "tags": ["string", "length", "built-in"],
+    "language": "python"
+  },
+  {
+    "id": "multiply_numbers",
+    "problem": "Write a function that multiplies two numbers.",
+    "difficulty": "easy", 
+    "test_cases": [
+      {"input": [2, 3], "expected_output": 6},
+      {"input": [0, 5], "expected_output": 0},
+      {"input": [-2, 4], "expected_output": -8},
+      {"input": [7, 1], "expected_output": 7}
+    ],
+    "solution": "def multiply_numbers(a: int, b: int) -> int:\n    return a * b",
+    "tags": ["arithmetic", "multiplication"],
+    "language": "python"
+  },
+  {
+    "id": "list_length",
+    "problem": "Write a function that returns the length of a list.",
+    "difficulty": "easy",
+    "test_cases": [
+      {"input": [1, 2, 3], "expected_output": 3},
+      {"input": [], "expected_output": 0},
+      {"input": [1], "expected_output": 1},
+      {"input": ["a", "b", "c", "d"], "expected_output": 4}
+    ],
+    "solution": "def list_length(lst: list) -> int:\n    return len(lst)",
+    "tags": ["list", "length", "built-in"],
+    "language": "python"
+  },
+  {
+    "id": "contains_substring",
+    "problem": "Write a function that checks if a string contains a specific substring.",
+    "difficulty": "easy",
+    "test_cases": [
+      {"input": ["hello world", "world"], "expected_output": true},
+      {"input": ["Python", "Java"], "expected_output": false},
+      {"input": ["test", ""], "expected_output": true},
+      {"input": ["", "test"], "expected_output": false}
+    ],
+    "solution": "def contains_substring(text: str, substring: str) -> bool:\n    return substring in text",
+    "tags": ["string", "substring", "search"],
+    "language": "python"
+  },
+  {
+    "id": "square_number",
+    "problem": "Write a function that returns the square of a number.",
+    "difficulty": "easy",
+    "test_cases": [
+      {"input": 3, "expected_output": 9},
+      {"input": 0, "expected_output": 0},
+      {"input": -4, "expected_output": 16},
+      {"input": 5, "expected_output": 25}
+    ],
+    "solution": "def square_number(n: int) -> int:\n    return n * n",
+    "tags": ["arithmetic", "square"],
+    "language": "python"
+  },
+  {
+    "id": "first_element",
+    "problem": "Write a function that returns the first element of a non-empty list.",
+    "difficulty": "easy",
+    "test_cases": [
+      {"input": [1, 2, 3], "expected_output": 1},
+      {"input": ["a", "b"], "expected_output": "a"},
+      {"input": [42], "expected_output": 42},
+      {"input": [true, false], "expected_output": true}
+    ],
+    "solution": "def first_element(lst: list):\n    return lst[0] if lst else None",
+    "tags": ["list", "indexing", "access"],
+    "language": "python"
+  },
+  {
+    "id": "absolute_value",
+    "problem": "Write a function that returns the absolute value of a number.",
+    "difficulty": "easy",
+    "test_cases": [
+      {"input": -5, "expected_output": 5},
+      {"input": 3, "expected_output": 3},
+      {"input": 0, "expected_output": 0},
+      {"input": -10, "expected_output": 10}
+    ],
+    "solution": "def absolute_value(n: int) -> int:\n    return abs(n)",
+    "tags": ["arithmetic", "absolute", "built-in"],
+    "language": "python"
+  }
+]

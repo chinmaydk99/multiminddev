@@ -6,12 +6,12 @@ logging setup, and LLM interface abstraction.
 """
 
 from .config import Config, load_config
-from .logging_setup import setup_logging
 from .llm_interface import LLMInterface
+from .logging_setup import setup_logging
 
 __all__ = [
     "Config",
-    "load_config", 
+    "load_config",
     "setup_logging",
     "LLMInterface",
 ]

@@ -1,0 +1,125 @@
+# Basic PPO training configuration for VERL + LangGraph Multi-Agent Framework
+# Optimized for training the Code Generator Agent with reinforcement learning
+
+version: "0.1.0"
+environment: "training"
+debug: false
+
+# LLM configuration optimized for training
+llm:
+  provider: "openai"  # or "anthropic", "local"
+  model: "gpt-4o-mini"  # Use smaller model for training efficiency
+  temperature: 0.7  # Balanced exploration vs exploitation
+  max_tokens: 1024  # Reduced for training efficiency
+  timeout: 120
+
+# Training-specific agent configuration
+agents:
+  generator:
+    temperature: 0.8  # Higher exploration during training
+    max_tokens: 1024
+    timeout: 90
+    retry_attempts: 2
+    include_comments: true
+    include_docstrings: true
+    default_language: "python"
+    supported_languages: ["python", "javascript"]
+    
+    
+  reviewer:
+    temperature: 0.3  # Lower temperature for consistent reviews
+    max_tokens: 1024
+    timeout: 90
+    retry_attempts: 2
+    focus_areas: ["correctness", "style", "performance", "readability"]
+    include_suggestions: true
+    security_focused: false  # Disable for training speed
+    
+  executor:
+    temperature: 0.5
+    max_tokens: 512
+    timeout: 60
+    retry_attempts: 2
+    
+    # Execution settings
+    execution_timeout: 30
+    sandboxed_execution: true
+    docker_enabled: false  # Disable Docker for training speed
+    network_disabled: true
+    
+    # Language support
+    supported_languages: ["python"]
+
+# Workflow configuration optimized for training
+workflow:
+  max_iterations: 2  # Reduced for training speed
+  human_in_loop: false
+  target_review_score: 70.0  # Slightly lower for training
+  min_execution_score: 30.0
+  human_feedback_threshold: 30.0
+  skip_execution_on_security_issues: false
+  require_review_before_execution: false
+  auto_iterate_on_failure: true
+
+# VERL training configuration
+training:
+  # Data paths
+  data_path: "./data/training_problems"
+  evaluation_data_path: "./data/evaluation_sets"
+  
+  # Basic training parameters
+  algorithm: "ppo"
+  episodes: 100
+  batch_size: 4  # Small batch size for memory efficiency
+  learning_rate: 1e-5  # Conservative learning rate
+  
+  # Checkpointing
+  checkpoint_dir: "./checkpoints/verl_training"
+  save_interval: 10  # Save every 10 episodes
+  
+  # Monitoring
+  wandb_project: null  # Disable W&B for basic training
+  log_interval: 1  # Log every episode
+  
+  # Reward function weights
+  reward_weights:
+    correctness: 0.7  # Primary focus on correctness
+    style: 0.2        # Secondary focus on code quality
+    efficiency: 0.1   # Minor focus on performance
+  
+  # VERL-specific parameters
+  verl:
+    kl_coef: 0.001           # KL divergence coefficient
+    ppo_epochs: 4            # Number of PPO epochs per update
+    mini_batch_size: 2       # Mini-batch size for PPO updates
+    clip_ratio: 0.2          # PPO clipping ratio
+    value_clip_ratio: 0.2    # Value function clipping ratio
+    max_grad_norm: 1.0       # Gradient clipping norm
+    entropy_coef: 0.01       # Entropy coefficient
+    value_loss_coef: 0.5     # Value loss coefficient
+
+# Note: Ray distributed training can be configured externally if needed
+
+# Logging configuration
+logging:
+  level: "INFO"
+  format: "structured"
+  file_path: null  # Log to stdout for training
+  include_timestamps: true
+  include_context: true
+  max_message_length: 1000
+
+# Security settings for training
+security:
+  enable_security_scanning: false  # Disable for training speed
+  blocked_imports: ["subprocess", "os.system", "eval", "exec"]
+  sandbox_all_execution: true
+  network_isolation: true
+  file_system_isolation: false  # Allow file access for training data
+  resource_limits: true
+
+# System settings
+max_concurrent_requests: 2  # Reduced for memory management
+request_timeout: 180
+
+# Note: Additional training settings can be configured programmatically

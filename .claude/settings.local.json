@@ -24,7 +24,14 @@
       "Bash(claude mcp:*)",
       "mcp__gemini-mcp-tool",
       "Bash(mkdir:*)",
-      "mcp__git-mcp"
+      "mcp__git-mcp",
+      "WebFetch(domain:verl.readthedocs.io)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:docs.ray.io)",
+      "Bash(uv add:*)",
+      "Bash(uv run ruff check:*)",
+      "Bash(uv run ruff:*)",
+      "Bash(uv run:*)"
     ],
     "deny": []
   }

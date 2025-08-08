@@ -10,6 +10,6 @@ from .workflows import CodingWorkflow, WorkflowState
 
 __all__ = [
     "CodingSupervisor",
-    "CodingWorkflow", 
+    "CodingWorkflow",
     "WorkflowState",
 ]
