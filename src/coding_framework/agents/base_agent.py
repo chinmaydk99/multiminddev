@@ -123,10 +123,14 @@ class BaseAgent(ABC):
         start_time = time.time()
         
         try:
+            # Extract temperature and max_tokens to avoid duplicate parameter issues
+            temperature = kwargs.pop("temperature", self.config.temperature)
+            max_tokens = kwargs.pop("max_tokens", self.config.max_tokens)
+            
             response = await self.llm_interface.call(
                 messages=messages,
-                temperature=kwargs.get("temperature", self.config.temperature),
-                max_tokens=kwargs.get("max_tokens", self.config.max_tokens),
+                temperature=temperature,
+                max_tokens=max_tokens,
                 **kwargs,
             )
             
