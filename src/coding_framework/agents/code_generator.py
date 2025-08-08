@@ -129,7 +129,7 @@ Always structure your response as:
             return AgentResponse(
                 agent_type=self.agent_type,
                 success=True,
-                content=response,
+                content=code_info["code"],  # Use extracted code instead of full response
                 metadata=metadata,
                 execution_time=execution_time,
             )
@@ -220,21 +220,50 @@ Always structure your response as:
         Returns:
             Dictionary with code and explanation
         """
-        # Look for code blocks
-        code_block_pattern = r"```(?:\w+\n)?(.*?)```"
-        code_matches = re.findall(code_block_pattern, response, re.DOTALL)
-
-        if code_matches:
-            # Take the largest code block (most likely the main solution)
-            code = max(code_matches, key=len).strip()
-
-            # Extract explanation (text before the first code block)
-            explanation_match = re.split(r"```", response, 1)
-            explanation = explanation_match[0].strip() if explanation_match else ""
-        else:
-            # Fallback: treat entire response as code if no code blocks found
+        # Multiple patterns to try for code extraction
+        patterns = [
+            r"```(?:python|py)\n(.*?)```",  # Python code blocks
+            r"```\n(.*?)```",              # Generic code blocks  
+            r"```(.*?)```",                 # Code blocks without newline
+        ]
+        
+        code = ""
+        explanation = ""
+        
+        for pattern in patterns:
+            code_matches = re.findall(pattern, response, re.DOTALL)
+            if code_matches:
+                # Take the largest code block (most likely the main solution)
+                code = max(code_matches, key=len).strip()
+                
+                # Extract explanation (text before the first code block)
+                explanation_match = re.split(r"```", response, 1)
+                explanation = explanation_match[0].strip() if explanation_match else ""
+                break
+        
+        if not code:
+            # Last fallback: treat entire response as code
             code = response.strip()
-            explanation = ""
+        
+        # Validate extracted code has basic Python syntax
+        if code:
+            try:
+                import ast
+                ast.parse(code)
+            except SyntaxError as e:
+                # If syntax is invalid, try to clean it up
+                self.logger.debug(f"Code extraction found syntax error: {e}")
+                code_lines = code.split('\n')
+                clean_lines = []
+                for line in code_lines:
+                    stripped = line.strip()
+                    # Skip lines that are clearly not code
+                    if not (stripped.startswith('*') or 
+                           stripped.startswith('-') or
+                           'explanation' in stripped.lower() or
+                           'approach' in stripped.lower()):
+                        clean_lines.append(line)
+                code = '\n'.join(clean_lines).strip()
 
         return {
             "code": code,

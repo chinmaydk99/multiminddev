@@ -73,10 +73,13 @@ class CorrectnessReward(BaseRewardFunction):
             return 0.0
 
         # Try using CodeExecutorAgent if available in context
-        if context and "executor_agent" in context:
-            return await self._evaluate_with_executor_agent(
-                generated_code, test_cases, context["executor_agent"]
-            )
+        if context and "executor_agent" in context and context["executor_agent"] is not None:
+            try:
+                return await self._evaluate_with_executor_agent(
+                    generated_code, test_cases, context["executor_agent"]
+                )
+            except Exception as e:
+                self.logger.debug(f"Executor agent failed, falling back to direct evaluation: {e}")
 
         # Fall back to direct evaluation
         return await self._evaluate_directly(generated_code, test_cases)
@@ -300,16 +303,21 @@ class CorrectnessReward(BaseRewardFunction):
                     break
 
             if main_func is None:
+                self.logger.debug(f"No functions found in code. Available: {list(safe_locals.keys())}")
                 # If no function found, try to evaluate the code directly
                 return eval(code, safe_globals, safe_locals)
 
             # Call the function with test input
             if isinstance(test_input, (list, tuple)):
-                return main_func(*test_input)
+                result = main_func(*test_input)
             else:
-                return main_func(test_input)
+                result = main_func(test_input)
+            
+            return result
 
         except Exception as e:
+            self.logger.debug(f"Code execution failed: {e}")
+            self.logger.debug(f"Code: {repr(code[:200])}...")
             raise RuntimeError(f"Execution error: {e}")
 
     def _compare_outputs(self, actual: Any, expected: Any) -> bool:
