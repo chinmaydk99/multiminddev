@@ -60,7 +60,7 @@ workflow:
   max_iterations: 2  # Reduced to save resources
   human_in_loop: false
   target_review_score: 70.0  # Slightly lower threshold
-  min_execution_score: 50.0
+  min_execution_score: 30.0  # Lower threshold for demo
   human_feedback_threshold: 30.0
   skip_execution_on_security_issues: true
   require_review_before_execution: true
