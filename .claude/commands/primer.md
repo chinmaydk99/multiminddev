@@ -7,6 +7,7 @@ Start with reading the CLAUDE.md file if it exists to get an understanding of th
 Read the README.md file to get an understanding of the project.
 
 IMPORTANT: Use Serena to search through the codebase. If you face any errors, retry with different Serena tools
+IMPORTANT: For any queries related to query or code snippets use git-mcp
 
 Read key files in the src/ or root directory
 

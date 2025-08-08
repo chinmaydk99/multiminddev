@@ -23,7 +23,8 @@
       "mcp__serena",
       "Bash(claude mcp:*)",
       "mcp__gemini-mcp-tool",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "mcp__git-mcp"
     ],
     "deny": []
   }
