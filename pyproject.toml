@@ -66,6 +66,7 @@ dependencies = [
     "transformers>=4.55.0",
     "datasets>=4.0.0",
     "langchain-community>=0.3.27",
+    "langchain-huggingface>=0.3.1",
 ]
 
 [project.optional-dependencies]

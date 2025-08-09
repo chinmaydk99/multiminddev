@@ -22,7 +22,7 @@ from coding_framework.orchestration.cuda_workflow import CUDAKernelWorkflow
 from coding_framework.training.cuda_data_loader import CUDADataLoader, CUDATrainingExample
 from coding_framework.training.reward_functions.cuda_performance_reward import CUDAPerformanceReward
 from coding_framework.verl_integration.cuda_multi_agent_trainer import CUDAMultiAgentVERLTrainer
-from coding_framework.utils.config import load_config
+from coding_framework.utils.config import load_config, AgentConfig
 
 import structlog
 
@@ -53,15 +53,22 @@ async def test_cuda_agents_initialization():
         config.llm.model = "Qwen/Qwen2.5-Coder-7B-Instruct"
         config.llm.temperature = 0.3
         
-        # Initialize agents
-        cuda_generator = CUDAGeneratorAgent(config.llm)
-        cuda_optimizer = CUDAOptimizerAgent(config.llm)
-        cuda_tester = CUDATesterAgent(config.llm)
+        # Create LLM interface
+        from coding_framework.utils.llm_interface import LLMInterface
+        llm_interface = LLMInterface(config.llm)
+        await llm_interface.initialize()
         
-        # Initialize all agents
-        await cuda_generator.initialize()
-        await cuda_optimizer.initialize() 
-        await cuda_tester.initialize()
+        # Create agent configs
+        agent_config = AgentConfig(
+            max_retries=2,
+            timeout=60,
+            enable_logging=True
+        )
+        
+        # Initialize agents (they are ready after construction)
+        cuda_generator = CUDAGeneratorAgent(agent_config, llm_interface)
+        cuda_optimizer = CUDAOptimizerAgent(agent_config, llm_interface)
+        cuda_tester = CUDATesterAgent(agent_config, llm_interface)
         
         # Health check all agents
         gen_health = await cuda_generator.health_check()
