@@ -404,6 +404,205 @@ class Product(ProductBase):
         from_attributes = True  # Enable ORM mode
 ```
 
+AI/ML Development Philosophy
+ZERO TOLERANCE FOR SHORTCUTS
+
+NEVER implement basic versions of existing sophisticated ML tools
+ALWAYS use established ML libraries - HuggingFace, PyTorch Lightning, TRL, PEFT, etc.
+NO custom training loops when proper trainers exist (SFTTrainer, Trainer, PPOTrainer)
+NO manual implementations of well-established ML patterns
+USE library defaults first - only customize when requirements demand it
+
+Library-First Approach
+When AI/ML functionality is requested:
+Training Tasks:
+
+Supervised Fine-tuning → Use SFTTrainer from TRL or Trainer from transformers
+RLHF/PPO → Use PPOTrainer from TRL
+DPO → Use DPOTrainer from TRL
+Parameter-efficient tuning → Use PEFT library (LoRA, AdaLoRA, etc.)
+Distributed training → Use accelerate or PyTorch Lightning
+
+Data Handling:
+
+Dataset operations → Use datasets library, not custom file readers
+Tokenization → Use AutoTokenizer, not manual text processing
+Data loading → Use DataLoader with proper collators
+Preprocessing → Use established preprocessing pipelines
+
+Model Operations:
+
+Model loading → Use AutoModel, AutoTokenizer from transformers
+Quantization → Use bitsandbytes or built-in quantization
+Memory optimization → Use gradient checkpointing, mixed precision from libraries
+Inference → Use model.generate() or pipeline() APIs
+
+Research-Grade Standards
+
+Reproducibility: Always set seeds, document versions, track experiments
+Evaluation: Use evaluate library metrics, not custom implementations
+Monitoring: Integrate with experiment tracking (W&B, TensorBoard)
+Documentation: Document hyperparameters, model choices, data preprocessing steps
+
+🏗️ AI/ML Project Architecture
+Dependency Management
+
+Core ML Stack: Always include transformers, torch, datasets, accelerate
+Training Libraries: Include TRL, PEFT for advanced training techniques
+Experiment Tracking: Include wandb or tensorboard for monitoring
+Evaluation: Include evaluate, scikit-learn for metrics
+Version Pinning: Pin major versions to ensure reproducibility
+
+Project Structure Principles
+src/ml_project/
+    configs/          # Configuration management (not hardcoded values)
+    data/            # Data pipeline components  
+    models/          # Model definitions and registry
+    training/        # Training pipeline (wrappers around proper trainers)
+    evaluation/      # Evaluation and benchmarking
+    utils/           # ML-specific utilities (device, memory, logging)
+Configuration Over Hardcoding
+
+No magic numbers in code - all hyperparameters in config files
+Environment-specific configs for different setups (local, cluster, colab)
+Hierarchical configuration with sensible defaults and overrides
+Type validation for all ML parameters using Pydantic
+
+🔧 ML Environment Standards
+Environment Setup Principles
+
+CUDA Compatibility: Always verify CUDA/PyTorch compatibility before installation
+Virtual Environment: Use UV for consistent package management
+GPU Verification: Always test GPU availability and memory after setup
+Dependency Conflicts: Check for version conflicts in ML stack
+
+Device and Memory Management
+
+Use accelerate for device management instead of manual device placement
+Memory optimization through library features (gradient checkpointing, mixed precision)
+Proper cleanup of GPU memory between experiments
+Batch size optimization through systematic testing
+
+📊 Experiment Management
+Reproducibility Requirements
+
+Seed everything: Random, NumPy, PyTorch seeds
+Version tracking: Log library versions, model versions, data versions
+Deterministic operations: Configure backends for reproducibility
+Code versioning: Track exact code state for each experiment
+
+Experiment Tracking Standards
+
+Comprehensive logging: Hyperparameters, metrics, system info, artifacts
+Comparison support: Tag experiments for easy comparison
+Artifact management: Save models, configs, predictions properly
+Progress monitoring: Real-time tracking of training progress
+
+Evaluation Principles
+
+Multiple metrics: Use diverse evaluation metrics from evaluate library
+Proper validation: Hold-out sets, cross-validation where appropriate
+Statistical significance: Multiple runs for reliable results
+Baseline comparison: Always compare against established baselines
+
+🚨 ML-Specific Error Handling
+Common ML Error Patterns
+
+CUDA OOM: Provide actionable guidance (reduce batch size, enable checkpointing)
+Model loading failures: Check model names, network connectivity, file permissions
+Training interruptions: Proper checkpoint saving and resumption
+Memory leaks: Proper cleanup and monitoring
+
+Graceful Degradation
+
+Fallback strategies: CPU fallback when GPU unavailable
+Progressive resource usage: Start with conservative settings, scale up
+Early stopping: Implement proper early stopping with checkpoints
+Resource monitoring: Track and alert on resource usage
+
+🧪 ML Testing Philosophy
+Testing Requirements
+
+Model sanity checks: Forward pass, shape verification, gradient flow
+Training loop validation: Single step training, loss computation
+Data pipeline testing: Tokenization, batching, shuffling
+Device consistency: Model and data on same device
+Reproducibility testing: Same inputs produce same outputs
+
+Performance Testing
+
+Memory usage: Track memory consumption under different loads
+Training speed: Benchmark training time per epoch/step
+Inference latency: Measure prediction time for different batch sizes
+Scalability: Test behavior with different data sizes
+
+🔍 Performance Optimization Guidelines
+Memory Optimization Strategy
+
+Use library features first: Gradient checkpointing, mixed precision, model sharding
+Batch size tuning: Systematic approach to find optimal batch size
+Model optimization: Use quantization, pruning from established libraries
+Memory monitoring: Track peak memory usage and identify bottlenecks
+
+Training Optimization
+
+Learning rate scheduling: Use established schedulers, not custom curves
+Distributed training: Leverage accelerate or Lightning for multi-GPU
+Checkpointing strategy: Balance between storage and recovery time
+Compilation: Use torch.compile for supported operations
+
+Inference Optimization
+
+Model serving: Use proper serving frameworks (TorchServe, HF Inference API)
+Batching strategies: Dynamic batching for variable-length inputs
+Caching: Cache tokenization, model outputs where appropriate
+Quantization: Use library-provided quantization techniques
+
+📋 Quality Assurance for ML
+Code Quality Standards
+
+Type hints: All ML functions must have proper type annotations
+Documentation: Document model architectures, training procedures, evaluation metrics
+Modular design: Separate data, model, training, and evaluation concerns
+Error handling: Comprehensive error handling for ML-specific failures
+
+Model Quality Standards
+
+Validation metrics: Define and track relevant metrics for the task
+Baseline comparison: Always establish and beat meaningful baselines
+Robustness testing: Test model behavior on edge cases, adversarial inputs
+Bias evaluation: Check for bias in model predictions across different groups
+
+Deployment Readiness
+
+Model versioning: Proper versioning and metadata for deployed models
+API consistency: Standardized interfaces for model inference
+Performance monitoring: Track model performance in production
+Rollback capability: Ability to revert to previous model versions
+
+⚠️ Critical ML Principles
+Anti-Patterns to Avoid
+
+Reinventing wheels: Don't implement existing ML algorithms from scratch
+Ignoring established practices: Follow community conventions and best practices
+Premature optimization: Use library defaults before custom optimizations
+Hardcoded values: All parameters should be configurable
+Single-run experiments: Always run multiple seeds for reliable results
+
+When to Build Custom Solutions
+
+Novel research: When implementing genuinely new techniques
+Specific requirements: When library solutions don't meet exact needs
+Performance critical: When profiling shows library bottlenecks
+Domain specific: When adapting general techniques to specific domains
+
+Integration Requirements
+
+Version compatibility: Ensure all ML libraries work together
+Resource management: Proper handling of GPU memory and compute
+Monitoring integration: Connect ML metrics to overall system monitoring
+Documentation standards: Document all ML-specific configurations and decisions
+
 ## 🔄 Git Workflow
 
 ### Branch Strategy

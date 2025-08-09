@@ -1,18 +1,22 @@
 """
-Agent implementations for the Multi-Agent Coding Framework.
+Agent implementations for the Multi-Turn RL Training Framework.
 
-This module contains all agent implementations including the base agent class
-and specialized agents for code generation, review, and execution.
+This module contains trainable agents with owned model parameters that
+can be improved through reinforcement learning via VERL.
 """
 
-from .base_agent import BaseAgent
-from .cuda_generator import CUDAGeneratorAgent
-from .cuda_optimizer import CUDAOptimizerAgent
-from .cuda_tester import CUDATesterAgent
+from .trainable_agent import TrainableAgent, AgentResponse, GenerationOutput
+from .trainable_cuda_agents import (
+    TrainableCUDAGeneratorAgent,
+    TrainableCUDAOptimizerAgent,
+    TrainableCUDATesterAgent,
+)
 
 __all__ = [
-    "BaseAgent",
-    "CUDAGeneratorAgent",
-    "CUDAOptimizerAgent", 
-    "CUDATesterAgent",
+    "TrainableAgent",
+    "AgentResponse",
+    "GenerationOutput",
+    "TrainableCUDAGeneratorAgent",
+    "TrainableCUDAOptimizerAgent",
+    "TrainableCUDATesterAgent",
 ]

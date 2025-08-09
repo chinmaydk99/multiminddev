@@ -10,7 +10,7 @@ from typing import Any, Optional
 import structlog
 from pydantic import BaseModel
 
-from ..agents.base_agent import BaseAgent
+from ..agents.trainable_agent import TrainableAgent
 from ..utils.config import TrainingConfig
 from .base_trainer import BaseTrainer, TrainingResults
 
@@ -69,7 +69,7 @@ class VERLPPOTrainer(BaseTrainer):
 
     async def train_agent(
         self,
-        agent: BaseAgent,
+        agent: TrainableAgent,
         training_data: list[dict[str, Any]],
         validation_data: Optional[list[dict[str, Any]]] = None,
         episodes: int = 100,
@@ -166,7 +166,7 @@ class VERLPPOTrainer(BaseTrainer):
                 error=error_msg,
             )
 
-    async def _initialize_verl_components(self, agent: BaseAgent) -> None:
+    async def _initialize_verl_components(self, agent: TrainableAgent) -> None:
         """
         Initialize VERL training components.
 
@@ -196,7 +196,7 @@ class VERLPPOTrainer(BaseTrainer):
 
     async def _run_training_episode(
         self,
-        agent: BaseAgent,
+        agent: TrainableAgent,
         training_data: list[dict[str, Any]],
         reward_function: Any,
         episode: int,
@@ -350,7 +350,7 @@ class VERLPPOTrainer(BaseTrainer):
 
     async def _evaluate_training(
         self,
-        agent: BaseAgent,
+        agent: TrainableAgent,
         validation_data: Optional[list[dict[str, Any]]],
         reward_function: Any,
     ) -> dict[str, float]:

@@ -3,7 +3,7 @@ from typing import Dict, Any, List, Optional
 import structlog
 from pydantic import BaseModel, Field
 
-from ...agents.base_agent import BaseAgent
+from ...agents.base_agent import TrainableAgent
 
 
 class EvaluationConfig(BaseModel):
@@ -44,7 +44,7 @@ class BaseEvaluator(ABC):
         )
         
     @abstractmethod
-    async def evaluate_agent(self, agent: BaseAgent) -> EvaluationResult:
+    async def evaluate_agent(self, agent: TrainableAgent) -> EvaluationResult:
         """
         Evaluate an agent on the benchmark dataset.
         
@@ -204,7 +204,7 @@ class BaseEvaluator(ABC):
         
     async def generate_solutions(
         self,
-        agent: BaseAgent,
+        agent: TrainableAgent,
         problem: Dict[str, Any],
         num_solutions: int = 1
     ) -> List[str]:

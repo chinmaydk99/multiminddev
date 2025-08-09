@@ -7,7 +7,7 @@ import json
 import time
 
 from .verl_config import VERLTrainingConfig
-from ..agents.base_agent import BaseAgent
+from ..agents.trainable_agent import TrainableAgent
 from ..training.base_trainer import TrainingResults
 from ..training.curriculum_manager import CUDACurriculumManager, CurriculumTier, WorkflowResult
 from ..training.cuda_data_loader import CUDADataLoader
@@ -31,7 +31,7 @@ class VERLCoordinator:
         self.ray_initialized = False
         
         # Agent registry
-        self.agents: Dict[str, BaseAgent] = {}
+        self.agents: Dict[str, TrainableAgent] = {}
         self.agent_roles = {
             "generator": self.config.multi_agent.generator_agent_id,
             "reviewer": self.config.multi_agent.reviewer_agent_id,
@@ -308,7 +308,7 @@ class VERLCoordinator:
             except ImportError:
                 self.logger.warning("MLflow not available, skipping initialization")
                 
-    def register_agent(self, agent: BaseAgent, role: Optional[str] = None) -> None:
+    def register_agent(self, agent: TrainableAgent, role: Optional[str] = None) -> None:
         """Register an agent for multi-agent training."""
         
         agent_id = agent.agent_id

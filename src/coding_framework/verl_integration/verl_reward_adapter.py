@@ -3,7 +3,7 @@ from typing import Dict, Any, Optional, List
 import structlog
 import json
 
-from ..agents.base_agent import BaseAgent
+from ..agents.trainable_agent import TrainableAgent
 
 
 class VERLRewardAdapter:
@@ -17,9 +17,9 @@ class VERLRewardAdapter:
     
     def __init__(
         self,
-        generator_agent: BaseAgent,
-        reviewer_agent: Optional[BaseAgent] = None,
-        executor_agent: Optional[BaseAgent] = None,
+        generator_agent: TrainableAgent,
+        reviewer_agent: Optional[TrainableAgent] = None,
+        executor_agent: Optional[TrainableAgent] = None,
         reward_weights: Optional[Dict[str, float]] = None,
         logger: Optional[Any] = None
     ):

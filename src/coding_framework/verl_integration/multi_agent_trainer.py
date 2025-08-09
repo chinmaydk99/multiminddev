@@ -8,7 +8,7 @@ import time
 from typing import Dict, Any, List, Optional
 import structlog
 
-from ..agents.base_agent import BaseAgent
+from ..agents.trainable_agent import TrainableAgent
 from ..training.base_trainer import BaseTrainer, TrainingResults
 from ..utils.config import TrainingConfig
 from .verl_config import VERLTrainingConfig
@@ -42,7 +42,7 @@ class MultiAgentVERLTrainer(BaseTrainer):
         self.verl_coordinator = VERLCoordinator(self.verl_config)
         
         # Agent registry
-        self.agents: Dict[str, BaseAgent] = {}
+        self.agents: Dict[str, TrainableAgent] = {}
         self.primary_agent_id: Optional[str] = None
         
         # Training state
@@ -79,7 +79,7 @@ class MultiAgentVERLTrainer(BaseTrainer):
             self.logger.error(f"Failed to initialize distributed training: {e}")
             raise
             
-    def register_agent(self, agent: BaseAgent, is_primary: bool = False) -> None:
+    def register_agent(self, agent: TrainableAgent, is_primary: bool = False) -> None:
         """Register an agent for multi-agent training."""
         
         agent_id = agent.agent_id
@@ -95,7 +95,7 @@ class MultiAgentVERLTrainer(BaseTrainer):
             is_primary=is_primary
         )
         
-    def _get_agent_role(self, agent: BaseAgent) -> Optional[str]:
+    def _get_agent_role(self, agent: TrainableAgent) -> Optional[str]:
         """Determine agent role based on agent type."""
         
         agent_type = agent.agent_type.lower()
@@ -111,7 +111,7 @@ class MultiAgentVERLTrainer(BaseTrainer):
             
     async def train_agent(
         self,
-        agent: BaseAgent,
+        agent: TrainableAgent,
         training_data: List[Dict[str, Any]], 
         validation_data: Optional[List[Dict[str, Any]]] = None,
         episodes: int = 100,

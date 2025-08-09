@@ -14,25 +14,6 @@ from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings
 
 
-class LLMConfig(BaseModel):
-    """Configuration for LLM providers."""
-
-    provider: str = Field(
-        default="huggingface", description="LLM provider (openai, anthropic, huggingface, local)"
-    )
-    model: str = Field(default="bigcode/starcoder2-3b", description="Model name or HuggingFace model ID")
-    api_key: Optional[str] = Field(default=None, description="API key")
-    base_url: Optional[str] = Field(default=None, description="Custom base URL")
-    temperature: float = Field(default=0.7, ge=0.0, le=2.0, description="Generation temperature")
-    max_tokens: int = Field(default=2048, gt=0, description="Maximum tokens")
-    timeout: int = Field(default=60, gt=0, description="Request timeout in seconds")
-
-    # HuggingFace specific settings
-    use_auth_token: bool = Field(default=False, description="Use HuggingFace auth token")
-    device_map: str = Field(default="auto", description="Device mapping for model loading")
-    torch_dtype: str = Field(default="float16", description="PyTorch data type")
-    trust_remote_code: bool = Field(default=True, description="Trust remote code for custom models")
-
 
 class AgentConfig(BaseModel):
     """Base configuration for agents."""
@@ -242,7 +223,6 @@ class Config(BaseSettings):
     debug: bool = Field(default=False)
 
     # Component configurations
-    llm: LLMConfig = Field(default_factory=LLMConfig)
     agents: AgentsConfig = Field(default_factory=AgentsConfig)
     workflow: WorkflowConfig = Field(default_factory=WorkflowConfig)
     training: TrainingConfig = Field(default_factory=TrainingConfig)

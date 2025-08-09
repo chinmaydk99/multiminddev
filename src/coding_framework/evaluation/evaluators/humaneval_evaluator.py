@@ -5,7 +5,7 @@ from typing import Dict, Any, List
 from pathlib import Path
 
 from .base_evaluator import BaseEvaluator, EvaluationConfig, EvaluationResult
-from ...agents.base_agent import BaseAgent
+from ...agents.base_agent import TrainableAgent
 
 
 class HumanEvalConfig(EvaluationConfig):
@@ -82,7 +82,7 @@ class HumanEvalEvaluator(BaseEvaluator):
         self.logger.info(f"Created {len(sample_problems)} sample HumanEval problems")
         return sample_problems
         
-    async def evaluate_agent(self, agent: BaseAgent) -> EvaluationResult:
+    async def evaluate_agent(self, agent: TrainableAgent) -> EvaluationResult:
         """Evaluate agent on HumanEval benchmark."""
         
         start_time = time.time()

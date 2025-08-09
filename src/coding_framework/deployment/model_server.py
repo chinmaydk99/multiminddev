@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 import structlog
 from pathlib import Path
 
-from ..agents.base_agent import BaseAgent
+from ..agents.trainable_agent import TrainableAgent
 from ..verl_integration.verl_config import VERLDistributedConfig
 
 
@@ -81,7 +81,7 @@ class VERLModelServer:
         
         # Server state
         self.status = ServerStatus.STOPPED
-        self.loaded_agent: Optional[BaseAgent] = None
+        self.loaded_agent: Optional[TrainableAgent] = None
         self.server_start_time: Optional[float] = None
         
         # Request handling

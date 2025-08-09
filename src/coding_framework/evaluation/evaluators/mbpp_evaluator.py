@@ -4,7 +4,7 @@ from typing import Dict, Any, List
 from pathlib import Path
 
 from .base_evaluator import BaseEvaluator, EvaluationConfig, EvaluationResult
-from ...agents.base_agent import BaseAgent
+from ...agents.base_agent import TrainableAgent
 
 
 class MBPPConfig(EvaluationConfig):
@@ -148,7 +148,7 @@ class MBPPEvaluator(BaseEvaluator):
         
         return prompt
         
-    async def evaluate_agent(self, agent: BaseAgent) -> EvaluationResult:
+    async def evaluate_agent(self, agent: TrainableAgent) -> EvaluationResult:
         """Evaluate agent on MBPP benchmark."""
         
         start_time = time.time()

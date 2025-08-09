@@ -11,7 +11,7 @@ from typing import Any, Optional
 import structlog
 from pydantic import BaseModel
 
-from ..agents.base_agent import BaseAgent
+from ..agents.trainable_agent import TrainableAgent
 from ..utils.config import TrainingConfig
 
 
@@ -64,7 +64,7 @@ class BaseTrainer(ABC):
     @abstractmethod
     async def train_agent(
         self,
-        agent: BaseAgent,
+        agent: TrainableAgent,
         training_data: list[dict[str, Any]],
         validation_data: Optional[list[dict[str, Any]]] = None,
         episodes: int = 100,
@@ -200,7 +200,7 @@ class BaseTrainer(ABC):
     async def save_checkpoint(
         self,
         episode: int,
-        agent: BaseAgent,
+        agent: TrainableAgent,
         metrics: dict[str, Any],
     ) -> str:
         """

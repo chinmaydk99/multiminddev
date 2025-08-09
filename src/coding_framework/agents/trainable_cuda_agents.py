@@ -11,8 +11,9 @@ import subprocess
 from pathlib import Path
 import tempfile
 import json
+import structlog
 
-from .trainable_agent import TrainableAgent, GenerationOutput
+from .trainable_agent import TrainableAgent, AgentResponse, GenerationOutput
 
 
 class TrainableCUDAGeneratorAgent(TrainableAgent):
@@ -152,6 +153,42 @@ Generate ONLY the kernel code without explanations."""
             errors.append("Invalid kernel function signature")
         
         return len(errors) == 0, errors
+
+    async def process_request(
+        self,
+        request: str,
+        context: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> AgentResponse:
+        """
+        Process a request to generate CUDA kernel.
+        
+        Implementation of abstract method from TrainableAgent.
+        """
+        try:
+            # Generate CUDA kernel
+            result = await self.generate_cuda_kernel(
+                operation_description=request,
+                tensor_info=context.get("tensor_info") if context else None,
+                performance_hints=context.get("performance_hints") if context else None
+            )
+            
+            return AgentResponse(
+                agent_id=self.agent_id,
+                content=result["kernel_code"],
+                success=result["is_valid_syntax"],
+                metadata=result,
+                processing_time=0.0
+            )
+        except Exception as e:
+            self.logger.error(f"Error processing request: {e}")
+            return AgentResponse(
+                agent_id=self.agent_id,
+                content="",
+                success=False,
+                error=str(e),
+                processing_time=0.0
+            )
 
 
 class TrainableCUDAOptimizerAgent(TrainableAgent):
@@ -329,6 +366,48 @@ Return ONLY the optimized kernel code."""
             score += 0.1
         
         return min(score, 1.0)  # Cap at 1.0
+
+    
+    async def process_request(
+        self,
+        request: str,
+        context: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> AgentResponse:
+        """
+        Process a request to optimize CUDA kernel.
+        
+        Implementation of abstract method from TrainableAgent.
+        """
+        try:
+            # Extract kernel code from request or context
+            kernel_code = context.get("kernel_code", request) if context else request
+            performance_metrics = context.get("performance_metrics") if context else None
+            optimization_targets = context.get("optimization_targets", ["shared_memory", "memory_coalescing"]) if context else ["shared_memory", "memory_coalescing"]
+            
+            # Optimize kernel
+            result = await self.optimize_kernel(
+                kernel_code=kernel_code,
+                performance_metrics=performance_metrics,
+                optimization_targets=optimization_targets
+            )
+            
+            return AgentResponse(
+                agent_id=self.agent_id,
+                content=result["optimized_kernel"],
+                success=True,
+                metadata=result,
+                processing_time=0.0
+            )
+        except Exception as e:
+            self.logger.error(f"Error processing request: {e}")
+            return AgentResponse(
+                agent_id=self.agent_id,
+                content="",
+                success=False,
+                error=str(e),
+                processing_time=0.0
+            )
 
 
 class TrainableCUDATesterAgent(TrainableAgent):
@@ -575,3 +654,43 @@ Provide actionable feedback and improvement suggestions."""
             report_lines.append("- Apply memory coalescing and shared memory optimizations")
         
         return "\n".join(report_lines)
+
+    
+    async def process_request(
+        self,
+        request: str,
+        context: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> AgentResponse:
+        """
+        Process a request to test CUDA kernel.
+        
+        Implementation of abstract method from TrainableAgent.
+        """
+        try:
+            # Extract kernel code from request or context
+            kernel_code = context.get("kernel_code", request) if context else request
+            test_cases = context.get("test_cases", []) if context else []
+            
+            # Test kernel
+            result = await self.test_kernel(
+                kernel_code=kernel_code,
+                test_cases=test_cases
+            )
+            
+            return AgentResponse(
+                agent_id=self.agent_id,
+                content=result["report"],
+                success=result["compilation_success"],
+                metadata=result,
+                processing_time=0.0
+            )
+        except Exception as e:
+            self.logger.error(f"Error processing request: {e}")
+            return AgentResponse(
+                agent_id=self.agent_id,
+                content="",
+                success=False,
+                error=str(e),
+                processing_time=0.0
+            )

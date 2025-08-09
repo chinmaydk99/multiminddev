@@ -13,7 +13,7 @@ from .evaluators import (
     MBPPConfig, 
     BigCodeBenchConfig
 )
-from ..agents.base_agent import BaseAgent
+from ..agents.trainable_agent import TrainableAgent
 
 
 class BenchmarkManagerConfig:
@@ -67,7 +67,7 @@ class BenchmarkManager:
         
     async def run_comprehensive_evaluation(
         self,
-        agent: BaseAgent,
+        agent: TrainableAgent,
         benchmarks: List[str] = None,
         save_results: bool = True
     ) -> Dict[str, Any]:
@@ -166,7 +166,7 @@ class BenchmarkManager:
         
     async def _run_parallel_evaluations(
         self, 
-        agent: BaseAgent, 
+        agent: TrainableAgent, 
         benchmarks: List[str]
     ) -> Dict[str, Any]:
         """Run evaluations in parallel with concurrency limits."""
@@ -216,7 +216,7 @@ class BenchmarkManager:
         
     async def _run_sequential_evaluations(
         self, 
-        agent: BaseAgent, 
+        agent: TrainableAgent, 
         benchmarks: List[str]
     ) -> Dict[str, Any]:
         """Run evaluations sequentially."""
@@ -400,7 +400,7 @@ class BenchmarkManager:
         
     async def quick_evaluation(
         self,
-        agent: BaseAgent,
+        agent: TrainableAgent,
         benchmark: str = "humaneval",
         num_problems: int = 20
     ) -> Dict[str, Any]:

@@ -9,7 +9,7 @@ from typing import Dict, Any, List, Optional, Callable
 import structlog
 
 from .benchmark_manager import BenchmarkManager, BenchmarkManagerConfig
-from ..agents.base_agent import BaseAgent
+from ..agents.trainable_agent import TrainableAgent
 
 
 class VERLEvaluationConfig:
@@ -88,7 +88,7 @@ class VERLEvaluationBridge:
         
     async def evaluate_during_training(
         self,
-        agent: BaseAgent,
+        agent: TrainableAgent,
         step: int,
         training_metrics: Optional[Dict[str, Any]] = None,
         full_evaluation: bool = False
@@ -337,7 +337,7 @@ class VERLEvaluationBridge:
             "is_best": [r.get("is_best", False) for r in self.evaluation_history]
         }
         
-    async def final_evaluation(self, agent: BaseAgent) -> Dict[str, Any]:
+    async def final_evaluation(self, agent: TrainableAgent) -> Dict[str, Any]:
         """Run final comprehensive evaluation at the end of training."""
         
         self.logger.info("Running final comprehensive evaluation", agent_id=agent.agent_id)

@@ -1,8 +1,8 @@
 """
-VERL + LangGraph Multi-Agent Coding Framework
+Multi-Turn RL CUDA Code Generation Framework
 
-A sophisticated multi-agent system that combines LangGraph orchestration with VERL
-reinforcement learning for intelligent code generation, review, and execution.
+A multi-turn reinforcement learning framework using VERL for training
+specialized agents that generate and optimize CUDA kernels.
 """
 
 __version__ = "0.1.0"
@@ -10,20 +10,18 @@ __author__ = "MultiMindDev"
 __email__ = "multiminddev@example.com"
 
 from .agents import (
-    BaseAgent,
-    CUDAGeneratorAgent,
-    CUDAOptimizerAgent,
-    CUDATesterAgent,
+    TrainableAgent,
+    TrainableCUDAGeneratorAgent,
+    TrainableCUDAOptimizerAgent,
+    TrainableCUDATesterAgent,
 )
-from .orchestration import CodingSupervisor
 from .utils import load_config, setup_logging
 
 __all__ = [
-    "BaseAgent",
-    "CUDAGeneratorAgent",
-    "CUDAOptimizerAgent", 
-    "CUDATesterAgent",
-    "CodingSupervisor",
+    "TrainableAgent",
+    "TrainableCUDAGeneratorAgent",
+    "TrainableCUDAOptimizerAgent", 
+    "TrainableCUDATesterAgent",
     "setup_logging",
     "load_config",
 ]

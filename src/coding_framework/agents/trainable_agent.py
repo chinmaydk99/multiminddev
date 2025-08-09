@@ -19,8 +19,9 @@ from dataclasses import dataclass
 import structlog
 from pathlib import Path
 import json
-
-from .base_agent import BaseAgent
+import time
+from abc import ABC, abstractmethod
+from pydantic import BaseModel, Field
 
 
 @dataclass
@@ -33,7 +34,19 @@ class GenerationOutput:
     value_estimates: Optional[torch.Tensor] = None
 
 
-class TrainableAgent(BaseAgent):
+class AgentResponse(BaseModel):
+    """Standard response format for all agents."""
+
+    agent_type: str = Field(..., description="Type of agent that generated the response")
+    success: bool = Field(..., description="Whether the operation was successful")
+    content: str = Field(..., description="Main response content")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    execution_time: float = Field(..., description="Time taken to generate response")
+    timestamp: float = Field(default_factory=time.time, description="Response timestamp")
+    error: Optional[str] = Field(None, description="Error message if operation failed")
+
+
+class TrainableAgent(ABC):
     """
     Base class for agents with owned, trainable HuggingFace model parameters.
     
@@ -71,13 +84,19 @@ class TrainableAgent(BaseAgent):
             max_length: Maximum sequence length
             temperature: Generation temperature
         """
-        # Initialize base agent without LLM interface
-        super().__init__(
-            agent_id=agent_id,
-            agent_type=agent_type,
-            llm_interface=None,  # We own the model directly
-            **kwargs
+        # Initialize agent state
+        self.agent_id = agent_id
+        self.agent_type = agent_type
+        
+        # Set up structured logging
+        self.logger = structlog.get_logger(
+            agent_type=self.agent_type,
+            agent_id=self.agent_id,
         )
+        
+        # Agent state management
+        self.state: Dict[str, Any] = {}
+        self.performance_metrics: Dict[str, float] = {}
         
         self.model_name = model_name
         self.device = device
@@ -118,6 +137,26 @@ class TrainableAgent(BaseAgent):
             trainable_params=self.count_trainable_parameters()
         )
     
+    @abstractmethod
+    async def process_request(
+        self,
+        request: str,
+        context: Optional[Dict[str, Any]] = None,
+        **kwargs,
+    ) -> AgentResponse:
+        """
+        Process a request and return a standardized response.
+
+        Args:
+            request: The input request to process
+            context: Additional context information
+            **kwargs: Additional arguments specific to the agent
+
+        Returns:
+            Standardized agent response
+        """
+        pass
+    
     def _load_model(self, load_in_8bit: bool = False, load_in_4bit: bool = False) -> None:
         """Load model and tokenizer from HuggingFace."""
         try:
@@ -137,17 +176,22 @@ class TrainableAgent(BaseAgent):
             self.generation_config.eos_token_id = self.tokenizer.eos_token_id
             
             # Load model with appropriate precision
+            # Don't use device_map to avoid accelerate dependency issues
             load_kwargs = {
                 "trust_remote_code": True,
-                "device_map": "auto" if self.device == "cuda" else None,
             }
             
             if load_in_8bit:
                 load_kwargs["load_in_8bit"] = True
+                # For 8bit, we need device_map
+                load_kwargs["device_map"] = "auto"
             elif load_in_4bit:
                 load_kwargs["load_in_4bit"] = True
                 load_kwargs["bnb_4bit_compute_dtype"] = torch.float16
+                # For 4bit, we need device_map
+                load_kwargs["device_map"] = "auto"
             else:
+                # For regular loading, don't use device_map
                 load_kwargs["torch_dtype"] = torch.float16 if self.device == "cuda" else torch.float32
             
             self.model = AutoModelForCausalLM.from_pretrained(
@@ -155,8 +199,8 @@ class TrainableAgent(BaseAgent):
                 **load_kwargs
             )
             
-            # Move to device if not using device_map
-            if "device_map" not in load_kwargs or load_kwargs["device_map"] is None:
+            # Move to device if not using device_map (regular loading)
+            if "device_map" not in load_kwargs:
                 self.model = self.model.to(self.device)
             
             # Set up optimizer for trainable parameters
@@ -216,7 +260,11 @@ class TrainableAgent(BaseAgent):
             truncation=True,
             max_length=self.max_length - max_new_tokens,
             padding=True
-        ).to(self.device)
+        )
+        
+        # Move to the same device as the model when using 8bit quantization
+        model_device = next(self.model.parameters()).device
+        inputs = {k: v.to(model_device) for k, v in inputs.items()}
         
         # Generate with model
         with torch.cuda.amp.autocast(enabled=(self.device == "cuda")):
@@ -505,11 +553,17 @@ class TrainableAgent(BaseAgent):
             truncation=True,
             max_length=self.max_length,
             padding=True
-        ).to(self.device)
+        )
+        
+        # Move to the same device as the model
+        # When using device_map="auto" with 8bit, model might be distributed
+        # Get device from first parameter
+        model_device = next(self.model.parameters()).device
+        encoding = {k: v.to(model_device) for k, v in encoding.items()}
         
         # Forward pass
         self.model.train()
-        outputs = self.model(**encoding, labels=encoding.input_ids)
+        outputs = self.model(**encoding, labels=encoding["input_ids"])
         loss = outputs.loss
         
         # Backward pass
