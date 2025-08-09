@@ -1,2 +1,0 @@
-[console_scripts]
-coding-framework = coding_framework.cli:main

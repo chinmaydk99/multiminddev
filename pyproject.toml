@@ -32,18 +32,15 @@ dependencies = [
     "click>=8.0.0",
     "rich>=13.0.0",
     "typer>=0.9.0",
-    
     # LangGraph and LangChain
     "langgraph>=0.0.60",
     "langchain>=0.1.0",
     "langchain-core>=0.1.0",
     "langchain-openai>=0.0.8",
     "langchain-anthropic>=0.1.0",
-    
     # LLM providers
     "openai>=1.0.0",
     "anthropic>=0.18.0",
-    
     # Code execution and analysis
     "docker>=6.0.0",
     "ast-grep-py>=0.15.0",
@@ -52,23 +49,22 @@ dependencies = [
     "isort>=5.12.0",
     "mypy>=1.5.0",
     "bandit>=1.7.5",
-    
     # Async and concurrency
     "asyncio>=3.4.3",
     "aiofiles>=23.0.0",
     "httpx>=0.24.0",
-    
     # Data processing
     "pandas>=2.0.0",
     "numpy>=1.24.0",
     "jsonlines>=3.1.0",
-    
     # Monitoring and logging
     "structlog>=23.0.0",
     "wandb>=0.15.0",
-    
     # Ray for distributed computing
     "ray[default]>=2.6.0",
+    "torch>=2.8.0",
+    "transformers>=4.55.0",
+    "datasets>=4.0.0",
 ]
 
 [project.optional-dependencies]
@@ -99,6 +95,19 @@ training = [
     "wandb>=0.15.0",
 ]
 
+cuda = [
+    # CUDA development and execution
+    "pynvml>=11.5.0",        # NVIDIA GPU monitoring
+    "cupy-cuda11x>=12.0.0",  # CUDA Python bindings  
+    
+    # Performance profiling
+    "py-spy>=0.3.0",         # Python profiling
+    "psutil>=5.9.0",         # System monitoring
+    
+    # CUDA training dataset sources
+    "datasets>=2.14.0",      # HuggingFace datasets for AI CUDA Engineer Archive
+]
+
 phase3 = [
     # Distributed training
     "ray[default,train,tune]>=2.8.0",    # Distributed computing with Ray Train and Ray Tune
@@ -123,7 +132,7 @@ phase3 = [
 ]
 
 all = [
-    "coding-framework[dev,verl,training,phase3]"
+    "coding-framework[dev,verl,training,cuda,phase3]"
 ]
 
 [project.urls]

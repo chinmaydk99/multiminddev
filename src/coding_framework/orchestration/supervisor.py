@@ -11,7 +11,7 @@ from typing import Any, Optional
 
 import structlog
 
-from ..agents import BaseAgent, CodeExecutorAgent, CodeGeneratorAgent, CodeReviewerAgent
+from ..agents import BaseAgent, CUDAGeneratorAgent, CUDAOptimizerAgent, CUDATesterAgent
 from ..utils.config import Config
 from ..utils.llm_interface import LLMInterface
 from .workflows import CodingWorkflow

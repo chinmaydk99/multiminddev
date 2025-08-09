@@ -113,7 +113,7 @@ class VERLCoordinator:
             # Mock VERL trainer for now
             self.verl_trainer = MockVERLDistributedTrainer(verl_config)
             
-            self.logger.info("VERL trainer initialized", algorithm=self.config.distributed.algorithm)
+            self.logger.info("VERL trainer initialized", algorithm=self.config.algorithm)
             
         except Exception as e:
             self.logger.error(f"Failed to setup VERL trainer: {e}")
@@ -181,7 +181,7 @@ class VERLCoordinator:
                 "Starting distributed VERL training",
                 num_epochs=num_epochs,
                 train_data_path=train_data_path,
-                algorithm=self.config.distributed.algorithm
+                algorithm=self.config.algorithm
             )
             
             # Prepare training data for VERL
@@ -214,7 +214,7 @@ class VERLCoordinator:
             
             return TrainingResults(
                 success=True,
-                algorithm=self.config.distributed.algorithm,
+                algorithm=self.config.algorithm,
                 episodes=num_epochs,
                 metrics=training_results,
                 training_time=total_time,
@@ -225,8 +225,9 @@ class VERLCoordinator:
             self.logger.error(f"Distributed VERL training failed: {e}")
             return TrainingResults(
                 success=False,
-                algorithm=self.config.distributed.algorithm,
+                algorithm=self.config.algorithm,
                 episodes=num_epochs,
+                metrics={},  # Required field
                 training_time=time.time() - start_time,
                 error=str(e)
             )
@@ -234,62 +235,132 @@ class VERLCoordinator:
             self.training_active = False
             
     async def _prepare_training_data(self, data_path: str) -> List[Dict[str, Any]]:
-        """Prepare training data in VERL's expected format."""
+        """Prepare training data in VERL's expected format from Hugging Face datasets."""
         
-        self.logger.info("Preparing training data", data_path=data_path)
+        self.logger.info("Loading training data from Hugging Face", dataset=data_path)
         
-        training_data = []
-        
-        # Load and preprocess data
-        with open(data_path, 'r') as f:
-            for line in f:
+        try:
+            from datasets import load_dataset
+            
+            # Load training dataset from Hugging Face (NOT HumanEval to avoid eval hacking)
+            if data_path in ["mbpp", "google-research-datasets/mbpp"]:
+                dataset = load_dataset("google-research-datasets/mbpp", split="train")
+                self.logger.info(f"Loaded MBPP training dataset with {len(dataset)} examples")
+            elif data_path in ["codeparrot/github-code-clean", "github-code"]:
+                dataset = load_dataset("codeparrot/github-code-clean", split="train", streaming=True)
+                # Take first 10000 examples to avoid memory issues
+                dataset = dataset.take(10000)
+                self.logger.info("Loaded GitHub Code dataset (first 10k examples)")
+            else:
+                # Try to load as custom dataset
+                dataset = load_dataset(data_path, split="train")
+                self.logger.info(f"Loaded custom dataset with {len(dataset)} examples")
+            
+            training_data = []
+            
+            for i, item in enumerate(dataset):
                 try:
-                    data_item = json.loads(line.strip())
-                    
-                    # Convert to VERL's multi-turn format
-                    verl_item = {
-                        "prompt": data_item.get("problem", ""),
-                        "conversations": [],
-                        "metadata": {
-                            "problem_id": data_item.get("id", ""),
-                            "difficulty": data_item.get("difficulty", "medium"),
-                            "test_cases": data_item.get("test_cases", []),
+                    # Convert different dataset formats to VERL's multi-turn format
+                    if "text" in item:  # MBPP format
+                        verl_item = {
+                            "prompt": item.get("text", ""),
+                            "conversations": [],
+                            "metadata": {
+                                "problem_id": item.get("task_id", f"mbpp_{i}"),
+                                "difficulty": "medium",
+                                "test_cases": item.get("test_list", []),
+                                "canonical_solution": item.get("code", "")
+                            }
                         }
-                    }
+                    elif "prompt" in item:  # HumanEval-like format
+                        verl_item = {
+                            "prompt": item.get("prompt", ""),
+                            "conversations": [],
+                            "metadata": {
+                                "problem_id": item.get("task_id", f"problem_{i}"),
+                                "difficulty": "medium",
+                                "test_cases": item.get("test", ""),
+                                "canonical_solution": item.get("canonical_solution", "")
+                            }
+                        }
+                    elif "content" in item:  # GitHub code format
+                        verl_item = {
+                            "prompt": f"# Complete this code:\n{item.get('content', '')[:500]}",
+                            "conversations": [],
+                            "metadata": {
+                                "problem_id": f"github_{i}",
+                                "difficulty": "medium",
+                                "language": item.get("language", "python"),
+                                "canonical_solution": item.get("content", "")
+                            }
+                        }
+                    else:
+                        # Generic format
+                        verl_item = {
+                            "prompt": str(item).get("prompt", str(item)[:500]),
+                            "conversations": [],
+                            "metadata": {
+                                "problem_id": f"generic_{i}",
+                                "difficulty": "medium"
+                            }
+                        }
                     
                     training_data.append(verl_item)
                     
                 except Exception as e:
-                    self.logger.warning(f"Skipping invalid data item: {e}")
+                    self.logger.warning(f"Skipping invalid data item {i}: {e}")
                     continue
                     
-        self.logger.info(f"Prepared {len(training_data)} training examples")
-        return training_data
+            self.logger.info(f"Prepared {len(training_data)} training examples from Hugging Face dataset")
+            return training_data
+            
+        except ImportError:
+            self.logger.error("datasets library not installed. Install with: pip install datasets")
+            raise
+        except Exception as e:
+            self.logger.error(f"Failed to load dataset from Hugging Face: {e}")
+            raise
         
     async def _prepare_evaluation_data(self, data_path: str) -> List[Dict[str, Any]]:
-        """Prepare evaluation data in VERL's expected format."""
+        """Prepare evaluation data in VERL's expected format from Hugging Face."""
         
-        self.logger.info("Preparing evaluation data", data_path=data_path)
+        self.logger.info("Loading evaluation data from Hugging Face", dataset=data_path)
         
-        eval_data = []
-        
-        with open(data_path, 'r') as f:
-            for line in f:
+        try:
+            from datasets import load_dataset
+            
+            # Load evaluation dataset (same as training for now)
+            if data_path in ["humaneval", "openai/HumanEval", "./data/eval_problems.jsonl"]:
+                dataset = load_dataset("openai/HumanEval", split="test")
+                self.logger.info(f"Loaded HumanEval evaluation dataset with {len(dataset)} examples")
+            else:
+                dataset = load_dataset(data_path, split="test")
+                self.logger.info(f"Loaded custom evaluation dataset with {len(dataset)} examples")
+            
+            eval_data = []
+            
+            for i, item in enumerate(dataset):
                 try:
-                    data_item = json.loads(line.strip())
                     eval_item = {
-                        "prompt": data_item.get("problem", ""),
-                        "expected_output": data_item.get("solution", ""),
-                        "test_cases": data_item.get("test_cases", []),
-                        "metadata": data_item.get("metadata", {})
+                        "prompt": item.get("prompt", ""),
+                        "expected_output": item.get("canonical_solution", ""),
+                        "test_cases": item.get("test", ""),
+                        "metadata": {
+                            "task_id": item.get("task_id", f"eval_{i}"),
+                            "entry_point": item.get("entry_point", "")
+                        }
                     }
                     eval_data.append(eval_item)
                 except Exception as e:
-                    self.logger.warning(f"Skipping invalid eval item: {e}")
+                    self.logger.warning(f"Skipping invalid eval item {i}: {e}")
                     continue
                     
-        self.logger.info(f"Prepared {len(eval_data)} evaluation examples")
-        return eval_data
+            self.logger.info(f"Prepared {len(eval_data)} evaluation examples from Hugging Face")
+            return eval_data
+            
+        except Exception as e:
+            self.logger.error(f"Failed to load evaluation dataset: {e}")
+            raise
         
     def _create_multi_agent_reward_function(self):
         """Create reward function that coordinates multiple agents."""

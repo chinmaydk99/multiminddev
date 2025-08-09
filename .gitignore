@@ -1,0 +1,106 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyTorch
+*.pth
+*.pt
+
+# CUDA
+*.cubin
+*.fatbin
+*.ptx
+
+# Virtual environments
+.env
+.venv/
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/
+.cache/
+*.cover
+
+# Jupyter
+.ipynb_checkpoints
+
+# Logs
+*.log
+logs.txt
+*.out
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# SSH keys and credentials
+*.pem
+*.key
+*.crt
+
+# Data
+data/raw/
+data/processed/
+*.csv
+*.json.bak
+
+# Model checkpoints
+checkpoints/
+*.ckpt
+*.bin
+*.safetensors
+
+# Build artifacts
+*.egg-info/
+.eggs/
+
+# Coverage reports
+htmlcov/
+.coverage
+
+# Lambda Labs and remote testing artifacts
+remote_test_*.py
+*_test_result.txt
+
+# Temporary validation scripts
+validate_*.py
+test_*_simple.py
+*_integration_test.py
+performance_validation_*.py
+
+# Configuration overrides
+config/local.yaml
+config/secrets.yaml

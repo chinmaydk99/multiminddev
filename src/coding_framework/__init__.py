@@ -11,18 +11,18 @@ __email__ = "multiminddev@example.com"
 
 from .agents import (
     BaseAgent,
-    CodeExecutorAgent,
-    CodeGeneratorAgent,
-    CodeReviewerAgent,
+    CUDAGeneratorAgent,
+    CUDAOptimizerAgent,
+    CUDATesterAgent,
 )
 from .orchestration import CodingSupervisor
 from .utils import load_config, setup_logging
 
 __all__ = [
     "BaseAgent",
-    "CodeGeneratorAgent",
-    "CodeReviewerAgent",
-    "CodeExecutorAgent",
+    "CUDAGeneratorAgent",
+    "CUDAOptimizerAgent", 
+    "CUDATesterAgent",
     "CodingSupervisor",
     "setup_logging",
     "load_config",

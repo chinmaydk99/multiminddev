@@ -3,11 +3,22 @@ from typing import Dict, Any, Optional, List
 import structlog
 
 
+class MultiAgentVERLConfig(BaseModel):
+    """Multi-agent configuration for VERL training."""
+    
+    generator_agent_id: str = Field(default="code_generator", description="Code generator agent ID")
+    reviewer_agent_id: str = Field(default="code_reviewer", description="Code reviewer agent ID")
+    executor_agent_id: str = Field(default="code_executor", description="Code executor agent ID")
+
+
 class VERLDistributedConfig(BaseModel):
     """Configuration for VERL distributed training."""
     
     # Algorithm selection
     algorithm: str = Field(default="ppo", description="VERL algorithm: ppo, grpo, remax")
+    
+    # Multi-agent configuration
+    multi_agent: MultiAgentVERLConfig = Field(default_factory=MultiAgentVERLConfig, description="Multi-agent setup")
     
     # Distributed training configuration
     num_gpus: int = Field(default=4, description="Total number of GPUs for training")
@@ -56,36 +67,68 @@ class VERLDistributedConfig(BaseModel):
     # Resource limits
     memory_limit_gb: int = Field(default=80, description="Memory limit per GPU in GB")
     timeout_seconds: int = Field(default=3600, description="Training timeout in seconds")
+    
+    # Monitoring configuration
+    wandb_project: Optional[str] = Field(default=None, description="WandB project name")
+    mlflow_tracking_uri: Optional[str] = Field(default=None, description="MLflow tracking URI")
 
 
-class MultiAgentVERLConfig(BaseModel):
-    """Configuration for multi-agent coordination with VERL."""
     
-    # Agent configuration
-    generator_agent_id: str = Field(default="generator", description="Generator agent ID")
-    reviewer_agent_id: str = Field(default="reviewer", description="Reviewer agent ID") 
-    executor_agent_id: str = Field(default="executor", description="Executor agent ID")
+    @property
+    def distributed(self):
+        """Provide access to distributed config attributes."""
+        class DistributedConfig:
+            def __init__(self, parent):
+                self.parent = parent
+                
+            @property 
+            def ray_cluster_address(self):
+                return self.parent.ray_cluster_address
+                
+            @property
+            def ray_namespace(self):
+                return self.parent.ray_namespace
+                
+            @property
+            def num_gpus(self):
+                return self.parent.num_gpus
+                
+            @property
+            def num_nodes(self):
+                return self.parent.num_nodes
+                
+            @property
+            def gpus_per_node(self):
+                return self.parent.gpus_per_node
+                
+            @property
+            def experiment_name(self):
+                return self.parent.experiment_name
+                
+        return DistributedConfig(self)
     
-    # Multi-turn conversation configuration
-    max_turns: int = Field(default=5, description="Maximum conversation turns")
-    turn_timeout: int = Field(default=120, description="Timeout per turn in seconds")
-    
-    # Reward function configuration
-    reward_weights: Dict[str, float] = Field(
-        default_factory=lambda: {
-            "correctness": 0.6,
-            "code_quality": 0.2, 
-            "efficiency": 0.1,
-            "review_score": 0.1
-        },
-        description="Reward component weights"
-    )
-    
-    # Agent coordination strategy
-    coordination_strategy: str = Field(
-        default="sequential", 
-        description="Agent coordination: sequential, parallel, adaptive"
-    )
+    def to_verl_config(self) -> Dict[str, Any]:
+        """Convert to VERL-compatible configuration format."""
+        return {
+            "algorithm": self.algorithm,
+            "num_gpus": self.num_gpus,
+            "strategy": self.strategy,
+            "model_name": self.model_name,
+            "max_length": self.max_length,
+            "multi_agent": {
+                "generator_agent_id": self.multi_agent.generator_agent_id,
+                "reviewer_agent_id": self.multi_agent.reviewer_agent_id,
+                "executor_agent_id": self.multi_agent.executor_agent_id
+            },
+            "rollout_batch_size": self.rollout_batch_size,
+            "train_batch_size": self.train_batch_size,
+            "learning_rate": self.learning_rate,
+            "gradient_accumulation_steps": self.gradient_accumulation_steps,
+            "num_nodes": self.num_nodes,
+            "gpus_per_node": self.gpus_per_node,
+            "ray_cluster_address": self.ray_cluster_address,
+            "ray_namespace": self.ray_namespace
+        }
     
     # VERL multi-turn settings
     enable_multi_turn: bool = Field(default=True, description="Enable multi-turn RL")
@@ -128,7 +171,7 @@ class VERLTrainingConfig(BaseModel):
     )
     
     # Monitoring configuration
-    wandb_project: Optional[str] = Field(default="verl-coding-framework", description="WandB project")
+    wandb_project: Optional[str] = Field(default=None, description="WandB project")
     mlflow_tracking_uri: Optional[str] = Field(default=None, description="MLflow tracking URI")
     log_level: str = Field(default="INFO", description="Logging level")
     enable_profiling: bool = Field(default=False, description="Enable performance profiling")

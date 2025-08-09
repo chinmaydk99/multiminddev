@@ -1,0 +1,99 @@
+# CUDA Multi-Agent PPO Training Configuration
+version: "1.0.0"
+environment: "cuda_training"
+
+# LLM configuration optimized for CUDA code generation
+llm:
+  provider: "anthropic"  
+  model: "claude-3-sonnet-20240229"  # Good balance of capability and speed for CUDA code
+  temperature: 0.7
+  max_tokens: 4096  # Large context for complex kernels
+
+# CUDA-specific agent configurations
+agents:
+  cuda_generator:
+    temperature: 0.8
+    max_tokens: 2048
+    system_prompt_focus: "cuda_kernel_generation"
+    
+  cuda_optimizer:
+    temperature: 0.6  # Lower for focused optimization
+    max_tokens: 3072
+    system_prompt_focus: "cuda_performance_optimization"
+    
+  cuda_tester:
+    temperature: 0.3  # Very focused for testing/profiling
+    max_tokens: 1024
+    system_prompt_focus: "cuda_testing_and_profiling"
+
+# VERL training configuration for CUDA
+training:
+  algorithm: "ppo"
+  episodes: 50
+  batch_size: 4  # Smaller batches for complex CUDA conversations
+  learning_rate: 5e-6  # Conservative for specialized domain
+  
+  # CUDA-specific training data
+  data_sources:
+    - "SakanaAI/AI-CUDA-Engineer-Archive"
+    - "kernelbench_local"
+  
+  # Multi-turn conversation settings
+  conversation:
+    max_turns: 5
+    discount_factor: 0.9
+    early_termination_threshold: 0.8
+  
+  # CUDA reward function configuration
+  cuda_rewards:
+    target_speedup: 2.0
+    correctness_weight: 0.4
+    performance_weight: 0.4
+    improvement_weight: 0.2
+  
+  # VERL-specific parameters optimized for CUDA
+  verl:
+    kl_coef: 0.0001  # Lower for complex domain
+    ppo_epochs: 8    # More epochs for better learning
+    mini_batch_size: 1  # Small for conversation complexity
+    clip_ratio: 0.1   # Conservative clipping
+    
+# CUDA execution environment
+cuda:
+  nvcc_path: "nvcc"
+  cuda_arch: "sm_75"  # RTX 20xx series - will auto-detect if possible
+  optimization_level: "-O3"
+  profiling_enabled: true
+  nsight_compute_path: "ncu"  # Optional profiling
+
+# Ray distributed training (optional)
+ray:
+  num_workers: 2
+  resources_per_worker:
+    cpu: 4
+    gpu: 0.5  # Share GPUs between workers
+    memory: "16GB"
+
+# Logging and monitoring
+logging:
+  level: "INFO"
+  structured: true
+  file_path: "logs/cuda_training.log"
+
+monitoring:
+  wandb:
+    project: "cuda-multi-agent-training"
+    entity: "multiminddev"
+    enabled: false  # Set to true if using W&B
+  
+  metrics:
+    log_interval: 10  # Log every 10 episodes
+    save_checkpoints: true
+    checkpoint_interval: 25  # Save every 25 episodes
+
+# Performance and resource management
+performance:
+  max_concurrent_kernels: 4
+  cleanup_old_kernels: true
+  max_kernel_cache_size: 20
+  memory_limit_gb: 16

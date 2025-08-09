@@ -32,7 +32,18 @@
       "Bash(uv run ruff check:*)",
       "Bash(uv run ruff:*)",
       "Bash(uv run:*)",
-      "Bash(uv sync:*)"
+      "Bash(uv sync:*)",
+      "Bash(gemini:*)",
+      "WebFetch(domain:docs.lambda.ai)",
+      "Bash(./scripts/remote_install_deps.sh:*)",
+      "Bash(ssh:*)",
+      "Bash(scp:*)",
+      "Bash(pip install:*)",
+      "Bash(rm:*)",
+      "Bash(nvcc:*)",
+      "Bash(nvidia-smi:*)",
+      "Bash(./scripts/run_all_remote.sh:*)",
+      "Bash(del core_integration_test.py integration_test_cuda_workflow.py performance_validation_test.py simple_cuda_test.py simple_verl_test.py test_cuda_components.py test_fixes.py test_fixes_simple.py test_verl_import.py validate_cuda_implementation.py validate_simple.py working_phase3_test.py final_phase3_comprehensive_test.py)"
     ],
     "deny": []
   }
