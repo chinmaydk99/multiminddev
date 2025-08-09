@@ -9,6 +9,26 @@ class MultiAgentVERLConfig(BaseModel):
     generator_agent_id: str = Field(default="code_generator", description="Code generator agent ID")
     reviewer_agent_id: str = Field(default="code_reviewer", description="Code reviewer agent ID")
     executor_agent_id: str = Field(default="code_executor", description="Code executor agent ID")
+    
+    # Multi-turn configuration
+    enable_multi_turn: bool = Field(default=True, description="Enable multi-turn RL training")
+    max_turns: int = Field(default=5, description="Maximum turns per conversation")
+    coordination_strategy: str = Field(default="sequential", description="Agent coordination strategy")
+    
+    # Reward configuration
+    reward_weights: Dict[str, float] = Field(
+        default_factory=lambda: {
+            "generator": 0.4,
+            "reviewer": 0.3, 
+            "executor": 0.3
+        },
+        description="Reward weights for each agent"
+    )
+    
+    # Agent switching configuration
+    enable_agent_switching: bool = Field(default=True, description="Enable dynamic agent switching")
+    switching_threshold: float = Field(default=0.7, description="Quality threshold for agent switching")
+    max_agent_switches: int = Field(default=3, description="Maximum agent switches per conversation")
 
 
 class VERLDistributedConfig(BaseModel):
@@ -131,17 +151,11 @@ class VERLDistributedConfig(BaseModel):
         }
     
     # VERL multi-turn settings
-    enable_multi_turn: bool = Field(default=True, description="Enable multi-turn RL")
     conversation_reward_aggregation: str = Field(
         default="final_turn", 
         description="Reward aggregation: final_turn, cumulative, discounted"
     )
     discount_factor: float = Field(default=0.95, description="Discount factor for multi-turn rewards")
-    
-    # Agent switching logic
-    enable_agent_switching: bool = Field(default=True, description="Enable dynamic agent switching")
-    switching_threshold: float = Field(default=0.7, description="Quality threshold for agent switching")
-    max_agent_switches: int = Field(default=3, description="Maximum agent switches per conversation")
 
 
 class VERLTrainingConfig(BaseModel):

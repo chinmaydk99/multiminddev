@@ -132,7 +132,14 @@ class LLMInterface:
             ]
 
             response = await self.client.ainvoke(test_messages)
-            self.logger.info("Connection test successful", response_length=len(response.content))
+            
+            # Handle different response types
+            if hasattr(response, 'content'):
+                response_content = response.content
+            else:
+                response_content = str(response)
+            
+            self.logger.info("Connection test successful", response_length=len(response_content))
 
         except Exception as e:
             self.logger.error("Connection test failed", error=str(e))
@@ -167,7 +174,7 @@ class LLMInterface:
                 trust_remote_code=True,
             )
 
-            # Create pipeline
+            # Create pipeline (don't specify device when using accelerate with device_map)
             pipe = pipeline(
                 "text-generation",
                 model=model,
@@ -175,7 +182,6 @@ class LLMInterface:
                 max_new_tokens=self.config.max_tokens,
                 temperature=self.config.temperature,
                 do_sample=True,
-                device=0 if device == "cuda" else -1,
                 return_full_text=False,
             )
 
@@ -310,9 +316,21 @@ class LLMInterface:
 
             # Make the call
             if self.config.provider == "huggingface":
-                # HuggingFace models need special handling
-                response = await self._call_huggingface_model(messages, call_kwargs)
-                content = response
+                # Use LangChain HuggingFace wrapper for consistency
+                if call_kwargs:
+                    response = await self.client.ainvoke(messages, **call_kwargs)
+                else:
+                    response = await self.client.ainvoke(messages)
+                    
+                # Handle different response types
+                if hasattr(response, 'content'):
+                    content = response.content
+                elif isinstance(response, str):
+                    content = response
+                elif isinstance(response, dict):
+                    content = response.get('generated_text', str(response))
+                else:
+                    content = str(response)
             else:
                 if call_kwargs:
                     response = await self.client.ainvoke(messages, **call_kwargs)

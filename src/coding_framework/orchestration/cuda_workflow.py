@@ -1,7 +1,8 @@
-from typing import Dict, List, Any, Optional, TypedDict, Annotated
+from typing import Dict, List, Any, Optional, TypedDict, Annotated, Set
 from dataclasses import dataclass, field
 import time
 import structlog
+import re
 
 try:
     from langgraph.graph import StateGraph, END
@@ -18,8 +19,38 @@ except ImportError:
 from ..agents.cuda_generator import CUDAGeneratorAgent
 from ..agents.cuda_optimizer import CUDAOptimizerAgent
 from ..agents.cuda_tester import CUDATesterAgent
-from ..cuda.compiler import CUDACompiler
-from ..cuda.benchmarker import CUDABenchmarker
+from ..cuda.compiler import CUDACompiler, CompilationResult
+from ..cuda.benchmarker import CUDABenchmarker, BenchmarkResult
+from ..training.cuda_data_loader import CUDATrainingExample
+
+
+@dataclass
+class CUDAConversationState:
+    """Tracks multi-turn conversation state for iterative CUDA optimization."""
+    compilation_cache: Dict[str, CompilationResult] = field(default_factory=dict)
+    performance_trajectory: List[float] = field(default_factory=list)
+    failed_attempts: List[Dict[str, Any]] = field(default_factory=list)
+    optimization_strategies_tried: Set[str] = field(default_factory=set)
+    current_turn: int = 0
+    max_turns: int = 5
+    turn_discount_factor: float = 0.9
+    early_stop_threshold: float = 0.8
+    successful_compilations: int = 0
+    total_attempts: int = 0
+
+
+@dataclass
+class WorkflowResult:
+    """Result of multi-turn CUDA kernel optimization workflow."""
+    success: bool
+    final_speedup: float
+    turns_required: int
+    total_reward: float
+    compilation_success: bool = False
+    tests_passed: bool = False
+    best_kernel_code: Optional[str] = None
+    performance_metrics: Dict[str, Any] = field(default_factory=dict)
+    conversation_state: Optional[CUDAConversationState] = None
 
 
 class CUDAWorkflowState(TypedDict):
@@ -195,6 +226,300 @@ class CUDAKernelWorkflow:
                 "best_kernel": None,
                 "best_performance": 0.0
             }
+    
+    async def run_multiturn_optimization(
+        self, 
+        problem: CUDATrainingExample,
+        context: Dict[str, Any]
+    ) -> WorkflowResult:
+        """
+        Run multi-turn CUDA optimization with sophisticated state tracking.
+        
+        Args:
+            problem: Training example with problem description and expected performance
+            context: Additional context for the optimization process
+            
+        Returns:
+            WorkflowResult with comprehensive optimization metrics
+        """
+        
+        conversation_state = CUDAConversationState(
+            max_turns=context.get("max_turns", 5),
+            early_stop_threshold=context.get("early_stop_threshold", 0.8),
+            turn_discount_factor=context.get("turn_discount_factor", 0.9)
+        )
+        
+        self.logger.info(
+            "Starting multi-turn CUDA optimization",
+            problem_description=problem.problem_description[:100] + "...",
+            max_turns=conversation_state.max_turns
+        )
+        
+        best_speedup = 0.0
+        best_kernel_code = None
+        compilation_successful = False
+        tests_passed = False
+        
+        for turn in range(conversation_state.max_turns):
+            conversation_state.current_turn = turn
+            conversation_state.total_attempts += 1
+            
+            try:
+                # Generate kernel code with context from previous attempts
+                generation_context = {
+                    **context,
+                    "previous_attempts": conversation_state.failed_attempts[-3:],  # Last 3 failures
+                    "performance_trajectory": conversation_state.performance_trajectory,
+                    "turn_number": turn,
+                    "strategies_tried": list(conversation_state.optimization_strategies_tried),
+                    "problem_description": problem.problem_description,
+                    "torch_reference": problem.torch_reference
+                }
+                
+                self.logger.info(f"Turn {turn + 1}/{conversation_state.max_turns}: Generating kernel")
+                
+                generation_result = await self.cuda_generator.process_request(
+                    request=problem.problem_description,
+                    context=generation_context
+                )
+                
+                if not generation_result.success or not generation_result.content:
+                    self.logger.warning(f"Turn {turn}: Generation failed")
+                    conversation_state.failed_attempts.append({
+                        "turn": turn,
+                        "error": generation_result.error or "Generation failed",
+                        "stage": "generation"
+                    })
+                    continue
+                
+                kernel_code = generation_result.content
+                kernel_hash = str(hash(kernel_code))
+                
+                # Check compilation cache first
+                if kernel_hash in conversation_state.compilation_cache:
+                    compilation_result = conversation_state.compilation_cache[kernel_hash]
+                    self.logger.debug(f"Turn {turn}: Using cached compilation result")
+                else:
+                    # Compile kernel
+                    self.logger.info(f"Turn {turn}: Compiling kernel")
+                    compilation_result = await self.compiler.compile_kernel(
+                        kernel_code, f"kernel_turn_{turn}"
+                    )
+                    conversation_state.compilation_cache[kernel_hash] = compilation_result
+                
+                if not compilation_result.success:
+                    # Track failed attempt for next turn context  
+                    self.logger.warning(f"Turn {turn}: Compilation failed")
+                    conversation_state.failed_attempts.append({
+                        "turn": turn,
+                        "code": kernel_code[:500],  # Truncate for storage
+                        "error": compilation_result.stderr[:200],  # Truncate error
+                        "strategy": self._extract_strategy(kernel_code),
+                        "stage": "compilation"
+                    })
+                    continue
+                
+                conversation_state.successful_compilations += 1
+                compilation_successful = True
+                
+                # Extract and track optimization strategy
+                strategy = self._extract_strategy(kernel_code)
+                if strategy:
+                    conversation_state.optimization_strategies_tried.add(strategy)
+                
+                # Benchmark kernel performance
+                self.logger.info(f"Turn {turn}: Benchmarking kernel")
+                
+                # Create test tensors from problem specification
+                test_tensors = self._create_test_tensors(problem.test_inputs)
+                
+                if not test_tensors:
+                    self.logger.warning(f"Turn {turn}: Could not create test tensors")
+                    continue
+                
+                benchmark_result = await self.benchmarker.benchmark_kernel(
+                    binary_path=compilation_result.binary_path,
+                    test_inputs=test_tensors,
+                    kernel_name=f"kernel_turn_{turn}"
+                )
+                
+                if benchmark_result.success and benchmark_result.functional_correct:
+                    speedup = benchmark_result.speedup_ratio or 0.0
+                    conversation_state.performance_trajectory.append(speedup)
+                    tests_passed = True
+                    
+                    self.logger.info(
+                        f"Turn {turn}: Benchmark successful",
+                        speedup=speedup,
+                        functional_correct=benchmark_result.functional_correct
+                    )
+                    
+                    # Update best result
+                    if speedup > best_speedup:
+                        best_speedup = speedup
+                        best_kernel_code = kernel_code
+                    
+                    # Early termination check
+                    if speedup >= conversation_state.early_stop_threshold:
+                        self.logger.info(
+                            f"Turn {turn}: Early stop threshold reached",
+                            speedup=speedup,
+                            threshold=conversation_state.early_stop_threshold
+                        )
+                        break
+                        
+                else:
+                    self.logger.warning(f"Turn {turn}: Benchmark failed or incorrect results")
+                    conversation_state.failed_attempts.append({
+                        "turn": turn,
+                        "code": kernel_code[:500],
+                        "error": benchmark_result.error_message or "Benchmark failed",
+                        "strategy": strategy,
+                        "stage": "benchmarking"
+                    })
+                    conversation_state.performance_trajectory.append(0.0)
+                
+            except Exception as e:
+                self.logger.error(f"Turn {turn}: Unexpected error", error=str(e))
+                conversation_state.failed_attempts.append({
+                    "turn": turn,
+                    "error": str(e),
+                    "stage": "unexpected"
+                })
+        
+        # Calculate turn-based reward with discounting
+        final_reward = self._calculate_multiturn_reward(conversation_state)
+        
+        result = WorkflowResult(
+            success=len(conversation_state.performance_trajectory) > 0 and max(conversation_state.performance_trajectory, default=0) > 0,
+            final_speedup=best_speedup,
+            turns_required=conversation_state.current_turn + 1,
+            total_reward=final_reward,
+            compilation_success=compilation_successful,
+            tests_passed=tests_passed,
+            best_kernel_code=best_kernel_code,
+            performance_metrics={
+                "performance_trajectory": conversation_state.performance_trajectory,
+                "successful_compilations": conversation_state.successful_compilations,
+                "total_attempts": conversation_state.total_attempts,
+                "compilation_success_rate": conversation_state.successful_compilations / max(conversation_state.total_attempts, 1),
+                "strategies_tried": list(conversation_state.optimization_strategies_tried),
+                "failed_attempts_count": len(conversation_state.failed_attempts)
+            },
+            conversation_state=conversation_state
+        )
+        
+        self.logger.info(
+            "Multi-turn optimization completed",
+            final_speedup=best_speedup,
+            turns_required=result.turns_required,
+            total_reward=final_reward,
+            success=result.success
+        )
+        
+        return result
+    
+    def _extract_strategy(self, kernel_code: str) -> Optional[str]:
+        """Extract optimization strategy from kernel code analysis."""
+        if not kernel_code:
+            return None
+        
+        # Simple heuristic-based strategy detection
+        strategies = []
+        
+        # Check for common CUDA optimization patterns
+        if "shared" in kernel_code.lower() or "__shared__" in kernel_code:
+            strategies.append("shared_memory")
+        
+        if "warp" in kernel_code.lower() or "__shfl" in kernel_code:
+            strategies.append("warp_primitives")
+            
+        if "coalesced" in kernel_code.lower() or "coalesc" in kernel_code.lower():
+            strategies.append("memory_coalescing")
+            
+        if "__syncthreads" in kernel_code:
+            strategies.append("thread_synchronization")
+            
+        if "texture" in kernel_code.lower() or "tex1D" in kernel_code or "tex2D" in kernel_code:
+            strategies.append("texture_memory")
+            
+        if "const" in kernel_code.lower() or "__constant__" in kernel_code:
+            strategies.append("constant_memory")
+            
+        if "unroll" in kernel_code.lower() or "#pragma unroll" in kernel_code:
+            strategies.append("loop_unrolling")
+        
+        # Return primary strategy or generic if none detected
+        return strategies[0] if strategies else "general_optimization"
+    
+    def _calculate_multiturn_reward(self, conversation_state: CUDAConversationState) -> float:
+        """Calculate turn-based reward with discounting for multi-turn optimization."""
+        if not conversation_state.performance_trajectory:
+            return 0.0
+        
+        # Base reward from best performance achieved
+        best_performance = max(conversation_state.performance_trajectory)
+        base_reward = min(best_performance / 2.0, 1.0)  # Normalize to [0, 1]
+        
+        # Turn efficiency bonus/penalty
+        turns_used = conversation_state.current_turn + 1
+        max_turns = conversation_state.max_turns
+        efficiency_bonus = (max_turns - turns_used) / max_turns * 0.2  # Up to 20% bonus for fewer turns
+        
+        # Compilation success rate bonus
+        compilation_rate = conversation_state.successful_compilations / max(conversation_state.total_attempts, 1)
+        compilation_bonus = compilation_rate * 0.1  # Up to 10% bonus
+        
+        # Strategy diversity bonus (trying different approaches)
+        strategy_diversity_bonus = min(len(conversation_state.optimization_strategies_tried) * 0.05, 0.15)
+        
+        # Turn-based discounting for trajectory improvement
+        trajectory_reward = 0.0
+        for i, performance in enumerate(conversation_state.performance_trajectory):
+            discount_factor = conversation_state.turn_discount_factor ** i
+            trajectory_reward += performance * discount_factor * 0.1  # Weighted trajectory contribution
+        
+        total_reward = (
+            base_reward + 
+            efficiency_bonus + 
+            compilation_bonus + 
+            strategy_diversity_bonus + 
+            trajectory_reward
+        )
+        
+        return max(0.0, total_reward)  # Ensure non-negative reward
+    
+    def _create_test_tensors(self, test_input_specs: List[Dict[str, Any]]) -> Optional[List]:
+        """Create test tensors from input specifications."""
+        if not test_input_specs:
+            return None
+        
+        try:
+            import torch
+            test_tensors = []
+            
+            for spec in test_input_specs:
+                shape = spec.get("shape", [1024])
+                dtype_str = spec.get("dtype", "float32")
+                
+                # Map dtype string to torch dtype
+                dtype_map = {
+                    "float32": torch.float32,
+                    "float16": torch.float16,
+                    "int32": torch.int32,
+                    "int64": torch.int64
+                }
+                dtype = dtype_map.get(dtype_str, torch.float32)
+                
+                # Create random tensor
+                tensor = torch.randn(shape, dtype=dtype)
+                test_tensors.append(tensor)
+            
+            return test_tensors
+            
+        except Exception as e:
+            self.logger.warning(f"Failed to create test tensors: {e}")
+            return None
     
     async def _run_fallback_workflow(self, state: CUDAWorkflowState) -> Dict[str, Any]:
         """Fallback workflow implementation without LangGraph."""

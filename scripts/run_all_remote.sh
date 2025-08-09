@@ -5,7 +5,7 @@
 set -e
 
 # Configuration - EDIT THESE VARIABLES
-REMOTE_HOST="ubuntu@104.171.202.131"
+REMOTE_HOST="ubuntu@104.171.202.62"
 SSH_KEY_PATH="D:\Post_Masters\Upskilling\Products\MultiMindDev\multiminddev.pem"  # SET THIS TO YOUR LAMBDA LABS SSH KEY PATH
 PROJECT_DIR="MultiMindDev"
 

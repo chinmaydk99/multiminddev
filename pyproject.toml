@@ -65,6 +65,7 @@ dependencies = [
     "torch>=2.8.0",
     "transformers>=4.55.0",
     "datasets>=4.0.0",
+    "langchain-community>=0.3.27",
 ]
 
 [project.optional-dependencies]

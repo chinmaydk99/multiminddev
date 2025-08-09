@@ -7,7 +7,7 @@ using Pydantic for validation and type safety.
 
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any
 
 import yaml
 from pydantic import BaseModel, Field
@@ -18,9 +18,9 @@ class LLMConfig(BaseModel):
     """Configuration for LLM providers."""
 
     provider: str = Field(
-        default="openai", description="LLM provider (openai, anthropic, huggingface, local)"
+        default="huggingface", description="LLM provider (openai, anthropic, huggingface, local)"
     )
-    model: str = Field(default="gpt-4o-mini", description="Model name or HuggingFace model ID")
+    model: str = Field(default="bigcode/starcoder2-3b", description="Model name or HuggingFace model ID")
     api_key: Optional[str] = Field(default=None, description="API key")
     base_url: Optional[str] = Field(default=None, description="Custom base URL")
     temperature: float = Field(default=0.7, ge=0.0, le=2.0, description="Generation temperature")
@@ -108,6 +108,11 @@ class AgentsConfig(BaseModel):
     generator: GeneratorConfig = Field(default_factory=GeneratorConfig)
     reviewer: ReviewerConfig = Field(default_factory=ReviewerConfig)
     executor: ExecutorConfig = Field(default_factory=ExecutorConfig)
+    
+    # CUDA-specific agent configurations
+    cuda_generator: GeneratorConfig = Field(default_factory=GeneratorConfig)
+    cuda_optimizer: ReviewerConfig = Field(default_factory=ReviewerConfig) 
+    cuda_tester: ExecutorConfig = Field(default_factory=ExecutorConfig)
 
 
 class WorkflowConfig(BaseModel):
@@ -165,6 +170,33 @@ class TrainingConfig(BaseModel):
     reward_weights: dict[str, float] = Field(
         default_factory=lambda: {"correctness": 0.7, "style": 0.2, "efficiency": 0.1},
         description="Weights for composite reward function",
+    )
+    
+    # CUDA-specific reward parameters
+    cuda_rewards: dict[str, float] = Field(
+        default_factory=lambda: {
+            "target_speedup": 2.0,
+            "correctness_weight": 0.4,
+            "performance_weight": 0.4,
+            "improvement_weight": 0.2
+        },
+        description="CUDA-specific reward configuration"
+    )
+    
+    # Data sources configuration
+    data_sources: list[str] = Field(
+        default_factory=lambda: ["kernelbench_local"],
+        description="Training data sources"
+    )
+    
+    # Multi-turn conversation configuration
+    conversation: dict[str, Any] = Field(
+        default_factory=lambda: {
+            "max_turns": 5,
+            "discount_factor": 0.9,
+            "early_termination_threshold": 0.8
+        },
+        description="Multi-turn conversation settings"
     )
 
     # VERL-specific parameters
