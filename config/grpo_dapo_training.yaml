@@ -1,0 +1,241 @@
+# GRPO/DAPO Training Configuration for Multi-Agent CUDA RL
+# Based on VERL examples but adapted for multi-turn multi-agent training
+
+# Algorithm selection
+algorithm:
+  name: grpo  # Options: grpo, dapo, ppo
+  adv_estimator: grpo  # VERL advantage estimator type
+  
+  # GRPO specific settings
+  grpo:
+    group_size: 16  # Number of responses per prompt
+    kl_coef: 0.0  # No KL penalty for GRPO
+    use_kl_loss: false
+    clip_ratio_low: 0.2
+    clip_ratio_high: 0.28
+    clip_ratio_c: 10.0  # Clipping coefficient
+    
+  # DAPO specific settings
+  dapo:
+    use_kl_in_reward: false
+    loss_agg_mode: token-mean
+    overlong_penalty_factor: 1.0
+    enable_overlong_buffer: true
+    overlong_buffer_len: 4096
+    max_resp_len: 8192
+
+# Model configuration
+models:
+  generator:
+    path: Qwen/Qwen2.5-Coder-7B-Instruct
+    load_in_8bit: false
+    load_in_4bit: false
+    device_map: auto
+    trust_remote_code: true
+    
+  optimizer:
+    path: Qwen/Qwen2.5-Coder-7B-Instruct
+    load_in_8bit: false
+    load_in_4bit: false
+    device_map: auto
+    trust_remote_code: true
+    
+  tester:
+    use_trained_model: false  # Rule-based by default
+    model_path: null  # Optional: Qwen/Qwen2.5-Coder-1.5B-Instruct
+
+# Data configuration
+data:
+  train_files: data/cuda_problems/train.parquet
+  val_files: data/cuda_problems/test.parquet
+  train_batch_size: 512
+  max_prompt_length: 2048
+  max_response_length: 8192
+  truncation: left
+  prompt_key: prompt
+  filter_overlong_prompts: true
+  
+  # Multi-turn specific
+  max_turns_per_episode: 5
+  episodes_per_batch: 32
+
+# Training configuration
+training:
+  # Basic settings
+  total_epochs: 10
+  total_training_steps: 200
+  episodes_per_epoch: 100
+  
+  # Optimization
+  learning_rate: 1.0e-6
+  lr_warmup_steps: 10
+  weight_decay: 0.1
+  gradient_clip: 1.0
+  gradient_accumulation_steps: 4
+  
+  # Batch sizes for different components
+  ppo_mini_batch_size: 32
+  ppo_micro_batch_size_per_gpu: 8
+  
+  # Entropy and regularization
+  entropy_coeff: 0.0  # No entropy for GRPO/DAPO
+  
+  # Checkpointing
+  save_freq: 10
+  test_freq: 5
+  val_before_train: true
+  resume_mode: auto
+  
+  # Logging
+  logger: ["console", "wandb"]
+  project_name: "MultiTurnCUDARL"
+  experiment_name: "grpo_cuda_optimization"
+  log_val_generations: 10
+
+# Multi-turn specific configuration
+multi_turn:
+  max_turns: 5
+  early_termination_threshold: 2.0  # 2x speedup
+  turn_discount_factor: 0.9
+  immediate_reward_weight: 0.3
+  final_reward_weight: 0.7
+  
+  # Conversation flow
+  episode_flow:
+    - agent: generator
+      action: create_initial_kernel
+    - agent: tester
+      action: test_and_profile
+    - agent: optimizer
+      action: optimize_kernel
+    - agent: tester
+      action: validate_optimization
+    # Repeat optimizer->tester until convergence or max_turns
+
+# Reward configuration
+reward:
+  # Base reward components
+  speedup_weight: 0.4
+  correctness_weight: 0.3
+  efficiency_weight: 0.2
+  compilation_weight: 0.1
+  
+  # Target metrics
+  target_speedup: 1.5
+  target_occupancy: 0.75
+  
+  # Penalties
+  compilation_failure_penalty: -1.0
+  test_failure_penalty: -0.5
+  no_improvement_penalty: -0.1
+
+# Curriculum learning
+curriculum:
+  enabled: true
+  start_difficulty: easy
+  difficulty_progression: [easy, medium, hard]
+  difficulty_switch_epochs: [3, 6]
+  
+  # Difficulty-specific targets
+  easy:
+    target_speedup: 1.2
+    max_kernel_size: 100
+  medium:
+    target_speedup: 1.5
+    max_kernel_size: 200
+  hard:
+    target_speedup: 2.0
+    max_kernel_size: 500
+
+# Distributed training configuration (Ray)
+distributed:
+  # Ray cluster settings
+  ray_address: null  # null for local, or "ray://head-node:10001"
+  num_gpus_per_node: 8
+  num_nodes: 1
+  
+  # FSDP configuration
+  fsdp:
+    enabled: true
+    fsdp_size: 32
+    param_offload: true
+    optimizer_offload: true
+    
+  # Sequence parallel
+  sequence_parallel:
+    enabled: true
+    ulysses_sp_size: 4
+    
+  # Memory optimization
+  gradient_checkpointing: true
+  use_dynamic_bsz: true
+  
+  # vLLM configuration for generation
+  vllm:
+    enabled: true
+    tensor_model_parallel_size: 4
+    gpu_memory_utilization: 0.8
+    enable_chunked_prefill: true
+    max_num_batched_tokens: 10240
+
+# SFT pretraining configuration
+sft_pretraining:
+  enabled: true
+  num_epochs: 2
+  
+  # Data sources
+  use_huggingface_data: true
+  huggingface_dataset: SakanaAI/AI-CUDA-Engineer-Archive
+  
+  # Synthetic data generation
+  num_synthetic_examples:
+    generator: 10000
+    optimizer: 8000
+    
+  # SFT-specific optimization
+  sft_learning_rate: 5.0e-5
+  sft_batch_size: 64
+
+# Evaluation configuration
+evaluation:
+  # Benchmarks to run
+  benchmarks:
+    - compilation_success_rate
+    - functional_correctness
+    - performance_speedup
+    - memory_efficiency
+    
+  # Evaluation frequency
+  eval_every_n_episodes: 100
+  
+  # Test problem sets
+  test_problems:
+    - matrix_multiplication
+    - reduction_operations
+    - convolution_kernels
+    - memory_intensive_ops
+
+# Advanced settings
+advanced:
+  # Memory management
+  max_token_len_per_gpu: 20480
+  log_prob_max_token_len_per_gpu: 30720
+  
+  # Generation settings
+  temperature: 1.0
+  top_p: 1.0
+  top_k: -1  # -1 for vLLM, 0 for HF
+  
+  # Validation generation
+  val_temperature: 0.7
+  val_top_p: 0.9
+  val_top_k: -1
+  val_do_sample: true
+  val_n_samples: 1
+
+# Resource requirements
+resources:
+  min_gpu_memory_gb: 24  # Minimum GPU memory required
+  recommended_gpu_memory_gb: 40  # Recommended for optimal performance
+  min_cpu_cores: 16
+  min_ram_gb: 64
