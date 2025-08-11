@@ -6,15 +6,10 @@ in the VERL training pipeline.
 """
 
 from .base_reward import BaseRewardFunction
-from .composite_reward import CompositeReward
-from .correctness_reward import CorrectnessReward
-from .efficiency_reward import EfficiencyReward
-from .style_reward import StyleReward
+from .cuda_performance_reward import CUDAPerformanceReward, RewardComponents
 
 __all__ = [
     "BaseRewardFunction",
-    "CorrectnessReward",
-    "StyleReward",
-    "EfficiencyReward",
-    "CompositeReward",
+    "CUDAPerformanceReward",
+    "RewardComponents",
 ]

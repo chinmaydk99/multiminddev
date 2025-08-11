@@ -5,12 +5,12 @@ This module provides tools for compiling CUDA kernels, measuring performance,
 and managing CUDA execution workflows.
 """
 
-from .compiler import CUDACompiler, CompilationResult
-from .benchmarker import CUDABenchmarker, BenchmarkResult
+from .benchmarker import BenchmarkResult, CUDABenchmarker
+from .compiler import CompilationResult, CUDACompiler
 
 __all__ = [
     "CUDACompiler",
-    "CompilationResult", 
+    "CompilationResult",
     "CUDABenchmarker",
     "BenchmarkResult",
 ]

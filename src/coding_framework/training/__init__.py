@@ -7,13 +7,9 @@ including VERL PPO training, reward functions, and data pipeline components.
 
 from .base_trainer import BaseTrainer, TrainingResults
 from .data_loader import TrainingDataLoader, TrainingProblem
-from .reward_functions import (
-    BaseRewardFunction,
-    CompositeReward,
-    CorrectnessReward,
-    EfficiencyReward,
-    StyleReward,
-)
+from .multi_turn_conversation import MultiTurnConversationManager, CUDAConversationState, ConversationTurn
+from .reward_functions import BaseRewardFunction, CUDAPerformanceReward, RewardComponents
+from .verl_integration import MultiAgentVERLTrainer
 from .verl_trainer import VERLConfig, VERLPPOTrainer
 
 __all__ = [
@@ -24,8 +20,10 @@ __all__ = [
     "TrainingDataLoader",
     "TrainingProblem",
     "BaseRewardFunction",
-    "CorrectnessReward",
-    "StyleReward",
-    "EfficiencyReward",
-    "CompositeReward",
+    "CUDAPerformanceReward",
+    "RewardComponents",
+    "MultiTurnConversationManager",
+    "CUDAConversationState",
+    "ConversationTurn",
+    "MultiAgentVERLTrainer",
 ]

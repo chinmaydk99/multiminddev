@@ -1,588 +1,488 @@
-"""
-Multi-turn conversation state management for reinforcement learning training.
-Handles conversation flow, state tracking, and reward distribution across turns.
-"""
-
-import torch
-from typing import Dict, Any, List, Optional, Tuple
+import re
+import time
 from dataclasses import dataclass, field
-from datetime import datetime
-import asyncio
-import structlog
-import numpy as np
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
+import structlog
+import torch
 
 
-class AgentRole(Enum):
-    """Agent roles in the conversation."""
+class AgentType(Enum):
     GENERATOR = "generator"
     OPTIMIZER = "optimizer"
     TESTER = "tester"
 
+class TurnStatus(Enum):
+    SUCCESS = "success"
+    FAILURE = "failure"
+    PARTIAL = "partial"
 
 @dataclass
 class ConversationTurn:
-    """Represents a single turn in a multi-agent conversation."""
-    turn_id: int
-    agent_type: AgentRole
-    input_text: str
-    output_text: str
+    """Single turn in a multi-agent conversation."""
+    turn_number: int
+    agent_type: AgentType
+    prompt: str
+    response: str
+    status: TurnStatus
+
+    # Performance metrics for this turn
+    execution_time: float = 0.0
+    compilation_success: bool = False
+    performance_metrics: Dict[str, float] = field(default_factory=dict)
+
+    # Context and metadata
+    context: Dict[str, Any] = field(default_factory=dict)
+    timestamp: float = field(default_factory=time.time)
+
+    # RL training data
     log_probs: Optional[torch.Tensor] = None
-    token_ids: Optional[torch.Tensor] = None
-    immediate_reward: float = 0.0
-    timestamp: float = field(default_factory=lambda: datetime.now().timestamp())
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for serialization."""
-        return {
-            "turn_id": self.turn_id,
-            "agent_type": self.agent_type.value,
-            "input_text": self.input_text,
-            "output_text": self.output_text,
-            "immediate_reward": self.immediate_reward,
-            "timestamp": self.timestamp,
-            "metadata": self.metadata,
-            # Tensors stored as lists for JSON serialization
-            "log_probs": self.log_probs.tolist() if self.log_probs is not None else None,
-            "token_ids": self.token_ids.tolist() if self.token_ids is not None else None,
-        }
-
-
-@dataclass
-class CompilationResult:
-    """Result of kernel compilation attempt."""
-    success: bool
-    errors: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
-    execution_time_ms: Optional[float] = None
-    memory_usage_mb: Optional[float] = None
-
+    token_ids: Optional[List[int]] = None
+    attention_mask: Optional[torch.Tensor] = None
 
 @dataclass
 class CUDAConversationState:
-    """
-    Tracks state across a multi-turn CUDA optimization conversation.
-    
-    This maintains the complete conversation history, performance trajectory,
-    and rewards for training agents through RL.
-    """
-    problem: str  # Original PyTorch operation or CUDA problem
-    problem_id: str
-    difficulty: str = "medium"  # easy, medium, hard
-    turns: List[ConversationTurn] = field(default_factory=list)
-    current_kernel: Optional[str] = None
-    best_kernel: Optional[str] = None
-    performance_history: List[float] = field(default_factory=list)
-    compilation_results: List[CompilationResult] = field(default_factory=list)
-    final_reward: float = 0.0
-    episode_complete: bool = False
-    max_turns: int = 5
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    
-    @property
-    def num_turns(self) -> int:
-        """Get number of turns in conversation."""
-        return len(self.turns)
-    
-    @property
-    def current_performance(self) -> float:
-        """Get current performance metric."""
-        return self.performance_history[-1] if self.performance_history else 0.0
-    
-    @property
-    def best_performance(self) -> float:
-        """Get best performance achieved."""
-        return max(self.performance_history) if self.performance_history else 0.0
-    
-    def add_turn(
-        self,
-        agent_type: AgentRole,
-        input_text: str,
-        output_text: str,
-        log_probs: Optional[torch.Tensor] = None,
-        token_ids: Optional[torch.Tensor] = None,
-        immediate_reward: float = 0.0
-    ) -> ConversationTurn:
-        """Add a new turn to the conversation."""
-        turn = ConversationTurn(
-            turn_id=self.num_turns,
-            agent_type=agent_type,
-            input_text=input_text,
-            output_text=output_text,
-            log_probs=log_probs,
-            token_ids=token_ids,
-            immediate_reward=immediate_reward
-        )
-        self.turns.append(turn)
-        return turn
-    
-    def update_kernel(self, kernel_code: str, performance: float) -> None:
-        """Update current kernel and track performance."""
-        self.current_kernel = kernel_code
-        self.performance_history.append(performance)
-        
-        # Update best kernel if this is better
-        if performance >= self.best_performance:
-            self.best_kernel = kernel_code
-    
-    def should_terminate_early(self) -> bool:
-        """Determine if conversation should terminate early."""
-        # Terminate if we've reached max turns
-        if self.num_turns >= self.max_turns:
-            return True
-        
-        # Terminate if we've achieved excellent performance
-        if self.current_performance > 2.0:  # 2x speedup
-            return True
-        
-        # Terminate if performance has plateaued
-        if len(self.performance_history) >= 3:
-            recent_perf = self.performance_history[-3:]
-            if max(recent_perf) - min(recent_perf) < 0.05:  # Less than 5% change
-                return True
-        
-        return False
-    
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert state to dictionary for serialization."""
-        return {
-            "problem": self.problem,
-            "problem_id": self.problem_id,
-            "difficulty": self.difficulty,
-            "turns": [turn.to_dict() for turn in self.turns],
-            "current_kernel": self.current_kernel,
-            "best_kernel": self.best_kernel,
-            "performance_history": self.performance_history,
-            "final_reward": self.final_reward,
-            "episode_complete": self.episode_complete,
-            "num_turns": self.num_turns,
-            "best_performance": self.best_performance,
-            "metadata": self.metadata
-        }
+    """Complete state of a multi-turn CUDA optimization conversation."""
+    conversation_id: str
+    problem_description: str
+    difficulty_tier: str
 
+    # Conversation history
+    turns: List[ConversationTurn] = field(default_factory=list)
+
+    # Current state
+    current_kernel_code: str = ""
+    current_performance: Dict[str, float] = field(default_factory=dict)
+    target_performance: Dict[str, float] = field(default_factory=dict)
+
+    # Conversation outcomes
+    final_reward: float = 0.0
+    conversation_success: bool = False
+    termination_reason: str = ""
+
+    # Metadata
+    start_time: float = field(default_factory=time.time)
+    end_time: Optional[float] = None
+    total_turns: int = 0
 
 class MultiTurnConversationManager:
-    """
-    Manages multi-turn conversations between agents for CUDA optimization.
-    
-    Coordinates agent interactions, tracks state, and handles reward calculation.
-    """
-    
+    """Manages multi-turn conversations between CUDA optimization agents."""
+
     def __init__(
         self,
         generator_agent,
         optimizer_agent,
         tester_agent,
+        compiler,
+        benchmarker,
         max_turns: int = 5,
-        early_termination_threshold: float = 0.8
+        early_termination_threshold: float = 2.0,  # 2x speedup
+        performance_patience: int = 2  # Turns to wait for improvement
     ):
-        """
-        Initialize conversation manager.
-        
-        Args:
-            generator_agent: CUDA generator agent
-            optimizer_agent: CUDA optimizer agent
-            tester_agent: CUDA tester agent
-            max_turns: Maximum turns per episode
-            early_termination_threshold: Performance threshold for early termination
-        """
         self.generator_agent = generator_agent
         self.optimizer_agent = optimizer_agent
         self.tester_agent = tester_agent
+        self.compiler = compiler
+        self.benchmarker = benchmarker
+
         self.max_turns = max_turns
         self.early_termination_threshold = early_termination_threshold
-        
+        self.performance_patience = performance_patience
+
         self.logger = structlog.get_logger()
-        
-    async def run_conversation_episode(
+
+    async def run_conversation(
         self,
-        problem: str,
-        problem_id: str,
-        difficulty: str = "medium",
-        target_performance: float = 1.5
+        problem: Dict[str, Any],
+        conversation_id: str
     ) -> CUDAConversationState:
-        """
-        Run a complete multi-turn conversation episode.
-        
-        Args:
-            problem: CUDA optimization problem description
-            problem_id: Unique problem identifier
-            difficulty: Problem difficulty level
-            target_performance: Target speedup to achieve
-            
-        Returns:
-            Complete conversation state with all turns and rewards
-        """
+        """Run complete multi-turn conversation for CUDA optimization."""
+
         # Initialize conversation state
-        state = CUDAConversationState(
-            problem=problem,
-            problem_id=problem_id,
-            difficulty=difficulty,
+        conversation = CUDAConversationState(
+            conversation_id=conversation_id,
+            problem_description=problem["description"],
+            difficulty_tier=problem.get("difficulty", "medium"),
+            target_performance=problem.get("target_performance", {"speedup": 2.0})
+        )
+
+        self.logger.info(
+            "Starting multi-turn conversation",
+            conversation_id=conversation_id,
+            problem=problem["description"][:100] + "...",
             max_turns=self.max_turns
         )
-        
-        self.logger.info(
-            "Starting conversation episode",
-            problem_id=problem_id,
-            difficulty=difficulty,
-            target_performance=target_performance
-        )
-        
+
         try:
-            # Episode flow: Generator -> Tester -> Optimizer -> Tester -> ...
-            while not state.should_terminate_early():
-                turn_num = state.num_turns
-                
-                if turn_num == 0:
-                    # Turn 1: Generator creates initial kernel
-                    await self._generator_turn(state, problem)
-                    
-                elif turn_num % 2 == 1:
-                    # Odd turns: Tester evaluates kernel
-                    await self._tester_turn(state)
-                    
-                    # Check if we should continue optimizing
-                    if state.current_performance >= target_performance:
-                        self.logger.info(
-                            "Target performance achieved",
-                            current_performance=state.current_performance,
-                            target=target_performance
-                        )
-                        break
-                        
-                else:
-                    # Even turns: Optimizer improves kernel
-                    await self._optimizer_turn(state)
-            
-            # Calculate final reward
-            state.final_reward = self._calculate_final_reward(state, target_performance)
-            state.episode_complete = True
-            
-            self.logger.info(
-                "Conversation episode complete",
-                problem_id=problem_id,
-                num_turns=state.num_turns,
-                final_performance=state.current_performance,
-                final_reward=state.final_reward
-            )
-            
+            # Phase 1: Initial code generation
+            await self._generation_phase(conversation, problem)
+
+            # Phase 2: Iterative optimization
+            await self._optimization_phase(conversation, problem)
+
+            # Phase 3: Final evaluation
+            await self._final_evaluation(conversation)
+
         except Exception as e:
-            self.logger.error(f"Error in conversation episode: {e}")
-            state.episode_complete = True
-            state.final_reward = 0.0
-        
-        return state
-    
-    async def _generator_turn(self, state: CUDAConversationState, problem: str) -> None:
-        """Execute generator agent turn."""
-        self.logger.debug("Executing generator turn")
-        
-        # Generate initial kernel
-        result = await self.generator_agent.generate_cuda_kernel(
-            operation_description=problem,
-            tensor_info=state.metadata.get("tensor_info"),
-            performance_hints=state.metadata.get("performance_hints")
-        )
-        
-        # Create turn
-        turn = state.add_turn(
-            agent_type=AgentRole.GENERATOR,
-            input_text=problem,
-            output_text=result["kernel_code"],
-            log_probs=result.get("log_probs"),
-            token_ids=result.get("token_ids"),
-            immediate_reward=self._calculate_immediate_reward_generator(result)
-        )
-        
-        # Update state
-        state.update_kernel(result["kernel_code"], 1.0)  # Baseline performance
-        turn.metadata["kernel_name"] = result.get("kernel_name")
-        turn.metadata["is_valid_syntax"] = result.get("is_valid_syntax", False)
-    
-    async def _optimizer_turn(self, state: CUDAConversationState) -> None:
-        """Execute optimizer agent turn."""
-        self.logger.debug("Executing optimizer turn")
-        
-        # Get performance analysis from last test
-        last_test = state.compilation_results[-1] if state.compilation_results else None
-        performance_analysis = {
-            "current_speedup": state.current_performance,
-            "compilation_success": last_test.success if last_test else False,
-            "errors": last_test.errors if last_test else []
-        }
-        
-        # Optimize kernel
-        result = await self.optimizer_agent.optimize_kernel(
-            kernel_code=state.current_kernel,
-            performance_analysis=performance_analysis,
-            optimization_targets=["shared_memory", "memory_coalescing"]
-        )
-        
-        # Create turn
-        turn = state.add_turn(
-            agent_type=AgentRole.OPTIMIZER,
-            input_text=f"Optimize kernel with current performance: {state.current_performance}x",
-            output_text=result["optimized_code"],
-            log_probs=result.get("log_probs"),
-            token_ids=result.get("token_ids"),
-            immediate_reward=self._calculate_immediate_reward_optimizer(result)
-        )
-        
-        # Update kernel (performance will be updated after testing)
-        state.current_kernel = result["optimized_code"]
-        turn.metadata["applied_optimizations"] = result.get("applied_optimizations", [])
-        turn.metadata["optimization_score"] = result.get("optimization_score", 0.0)
-    
-    async def _tester_turn(self, state: CUDAConversationState) -> None:
-        """Execute tester agent turn."""
-        self.logger.debug("Executing tester turn")
-        
-        # Test current kernel
-        result = await self.tester_agent.test_kernel(
-            kernel_code=state.current_kernel,
-            test_inputs=state.metadata.get("test_inputs"),
-            performance_target=state.metadata.get("target_performance")
-        )
-        
-        # Create compilation result
-        compilation = CompilationResult(
-            success=result["compilation"]["success"],
-            errors=result["compilation"].get("errors", []),
-            warnings=result["compilation"].get("warnings", []),
-            execution_time_ms=result["performance"].get("execution_time_ms"),
-            memory_usage_mb=result["performance"].get("memory_usage_mb")
-        )
-        state.compilation_results.append(compilation)
-        
-        # Calculate performance improvement
-        speedup = result["performance"].get("speedup", 1.0)
-        state.update_kernel(state.current_kernel, speedup)
-        
-        # Create turn
-        turn = state.add_turn(
-            agent_type=AgentRole.TESTER,
-            input_text="Test and profile kernel",
-            output_text=result.get("test_report", ""),
-            immediate_reward=self._calculate_immediate_reward_tester(result)
-        )
-        
-        turn.metadata["test_results"] = result
-    
-    def _calculate_immediate_reward_generator(self, result: Dict[str, Any]) -> float:
-        """Calculate immediate reward for generator turn."""
-        reward = 0.0
-        
-        # Reward for valid syntax
-        if result.get("is_valid_syntax", False):
-            reward += 0.3
-        
-        # Reward for having kernel name
-        if result.get("kernel_name"):
-            reward += 0.1
-        
-        # Penalty for validation errors
-        errors = result.get("validation_errors", [])
-        reward -= 0.1 * len(errors)
-        
-        return max(reward, -1.0)
-    
-    def _calculate_immediate_reward_optimizer(self, result: Dict[str, Any]) -> float:
-        """Calculate immediate reward for optimizer turn."""
-        reward = 0.0
-        
-        # Reward based on optimization score
-        reward += result.get("optimization_score", 0.0) * 0.5
-        
-        # Reward for applied optimizations
-        applied = result.get("applied_optimizations", [])
-        reward += 0.1 * len(applied)
-        
-        return min(reward, 1.0)
-    
-    def _calculate_immediate_reward_tester(self, result: Dict[str, Any]) -> float:
-        """Calculate immediate reward for tester turn."""
-        reward = 0.0
-        
-        # Reward for successful compilation
-        if result["compilation"]["success"]:
-            reward += 0.2
-        
-        # Reward for correctness
-        if result.get("correctness", {}).get("passed", False):
-            reward += 0.3
-        
-        return reward
-    
-    def _calculate_final_reward(
-        self,
-        state: CUDAConversationState,
-        target_performance: float
-    ) -> float:
-        """
-        Calculate final episode reward based on achieved performance.
-        
-        Args:
-            state: Final conversation state
-            target_performance: Target speedup
-            
-        Returns:
-            Final reward value
-        """
-        # Base reward components
-        speedup_score = min(state.best_performance / target_performance, 2.0) * 0.4
-        
-        # Correctness score (based on compilation success)
-        compilations = [r.success for r in state.compilation_results]
-        correctness_score = (sum(compilations) / len(compilations)) * 0.3 if compilations else 0.0
-        
-        # Efficiency score (fewer turns is better)
-        efficiency_score = max(0, (self.max_turns - state.num_turns) / self.max_turns) * 0.2
-        
-        # Improvement score (reward for progressive improvement)
-        if len(state.performance_history) >= 2:
-            improvement = state.performance_history[-1] - state.performance_history[0]
-            improvement_score = min(improvement / target_performance, 1.0) * 0.1
-        else:
-            improvement_score = 0.0
-        
-        final_reward = speedup_score + correctness_score + efficiency_score + improvement_score
-        
-        self.logger.debug(
-            "Final reward calculation",
-            speedup_score=speedup_score,
-            correctness_score=correctness_score,
-            efficiency_score=efficiency_score,
-            improvement_score=improvement_score,
-            final_reward=final_reward
-        )
-        
-        return final_reward
-
-
-class TurnLevelRewardDistributor:
-    """
-    Distributes final episode reward across conversation turns for credit assignment.
-    """
-    
-    def __init__(
-        self,
-        discount_factor: float = 0.9,
-        immediate_weight: float = 0.3,
-        final_weight: float = 0.7
-    ):
-        """
-        Initialize reward distributor.
-        
-        Args:
-            discount_factor: Discount for future rewards
-            immediate_weight: Weight for immediate turn rewards
-            final_weight: Weight for final episode reward
-        """
-        self.discount_factor = discount_factor
-        self.immediate_weight = immediate_weight
-        self.final_weight = final_weight
-        self.logger = structlog.get_logger()
-    
-    def distribute_rewards(
-        self,
-        conversation_state: CUDAConversationState
-    ) -> List[float]:
-        """
-        Distribute final episode reward across turns.
-        
-        Args:
-            conversation_state: Complete conversation state
-            
-        Returns:
-            List of rewards for each turn
-        """
-        turn_rewards = []
-        final_reward = conversation_state.final_reward
-        num_turns = len(conversation_state.turns)
-        
-        for turn_idx, turn in enumerate(conversation_state.turns):
-            # Skip tester turns (rule-based, not trained)
-            if turn.agent_type == AgentRole.TESTER:
-                turn_rewards.append(0.0)
-                continue
-            
-            # Calculate discounted final reward component
-            turns_remaining = num_turns - turn_idx - 1
-            discounted_final = final_reward * (self.discount_factor ** turns_remaining)
-            
-            # Combine immediate and final rewards
-            turn_reward = (
-                self.immediate_weight * turn.immediate_reward +
-                self.final_weight * discounted_final
+            self.logger.error(
+                "Conversation failed with exception",
+                conversation_id=conversation_id,
+                error=str(e)
             )
-            
-            # Apply role-specific scaling
-            if turn.agent_type == AgentRole.GENERATOR:
-                # Generators get higher reward for good initial solutions
-                turn_reward *= 1.1
-            elif turn.agent_type == AgentRole.OPTIMIZER:
-                # Optimizers get reward scaled by performance improvement
-                if turn_idx > 0:
-                    perf_before = conversation_state.performance_history[turn_idx - 1]
-                    perf_after = conversation_state.performance_history[turn_idx]
-                    improvement_multiplier = max(0.5, min(2.0, perf_after / perf_before))
-                    turn_reward *= improvement_multiplier
-            
-            turn_rewards.append(turn_reward)
-        
-        self.logger.debug(
-            "Rewards distributed across turns",
-            num_turns=num_turns,
-            turn_rewards=turn_rewards,
-            final_reward=final_reward
+            conversation.termination_reason = f"Exception: {str(e)}"
+
+        conversation.end_time = time.time()
+        conversation.total_turns = len(conversation.turns)
+
+        self.logger.info(
+            "Conversation completed",
+            conversation_id=conversation_id,
+            total_turns=conversation.total_turns,
+            success=conversation.conversation_success,
+            final_reward=conversation.final_reward,
+            termination_reason=conversation.termination_reason
         )
-        
-        return turn_rewards
-    
-    def calculate_advantages(
+
+        return conversation
+
+    async def _generation_phase(
         self,
-        rewards: List[float],
-        values: Optional[List[float]] = None,
-        gamma: float = 0.99,
-        lam: float = 0.95
-    ) -> torch.Tensor:
-        """
-        Calculate GAE advantages for PPO training.
-        
-        Args:
-            rewards: List of rewards
-            values: Value estimates (if available)
-            gamma: Discount factor
-            lam: GAE lambda
-            
-        Returns:
-            Advantage estimates
-        """
-        if values is None:
-            # Simple advantage calculation without value function
-            advantages = []
-            discounted_reward = 0
-            for reward in reversed(rewards):
-                discounted_reward = reward + gamma * discounted_reward
-                advantages.append(discounted_reward)
-            advantages.reverse()
-            advantages = torch.tensor(advantages, dtype=torch.float32)
-        else:
-            # GAE with value function
-            advantages = torch.zeros(len(rewards))
-            last_advantage = 0
-            
-            for t in reversed(range(len(rewards))):
-                if t == len(rewards) - 1:
-                    next_value = 0
+        conversation: CUDAConversationState,
+        problem: Dict[str, Any]
+    ):
+        """Phase 1: Generate initial CUDA kernel."""
+
+        # Prepare prompt for generator
+        generator_prompt = self._create_generator_prompt(problem)
+
+        # Generate initial kernel
+        generator_response = await self.generator_agent.generate_response(
+            generator_prompt,
+            max_tokens=1024,
+            temperature=0.7
+        )
+
+        # Record turn
+        turn = ConversationTurn(
+            turn_number=0,
+            agent_type=AgentType.GENERATOR,
+            prompt=generator_prompt,
+            response=generator_response["text"],
+            status=TurnStatus.SUCCESS,  # Will be updated after testing
+            log_probs=generator_response.get("log_probs"),
+            token_ids=generator_response.get("token_ids")
+        )
+
+        # Extract kernel code from response
+        kernel_code = self._extract_kernel_code(generator_response["text"])
+        conversation.current_kernel_code = kernel_code
+
+        # Test initial generation
+        await self._test_kernel(conversation, turn, kernel_code)
+
+        conversation.turns.append(turn)
+
+    async def _optimization_phase(
+        self,
+        conversation: CUDAConversationState,
+        problem: Dict[str, Any]
+    ):
+        """Phase 2: Iterative optimization through agent collaboration."""
+
+        turns_without_improvement = 0
+        best_performance = 0.0
+
+        for turn_number in range(1, self.max_turns):
+
+            # Check early termination conditions
+            current_speedup = conversation.current_performance.get("speedup", 0.0)
+
+            if current_speedup >= self.early_termination_threshold:
+                conversation.termination_reason = f"Target speedup achieved: {current_speedup:.2f}x"
+                conversation.conversation_success = True
+                break
+
+            if turns_without_improvement >= self.performance_patience:
+                conversation.termination_reason = f"No improvement for {self.performance_patience} turns"
+                break
+
+            # Determine next agent based on current state
+            if conversation.turns[-1].compilation_success:
+                # If code compiles, use optimizer to improve performance
+                next_agent = self.optimizer_agent
+                next_agent_type = AgentType.OPTIMIZER
+                prompt = self._create_optimizer_prompt(conversation, problem)
+            else:
+                # If code doesn't compile, use generator to fix it
+                next_agent = self.generator_agent
+                next_agent_type = AgentType.GENERATOR
+                prompt = self._create_fix_prompt(conversation, problem)
+
+            # Generate response
+            response = await next_agent.generate_response(
+                prompt,
+                max_tokens=1024,
+                temperature=0.5  # Slightly more conservative in optimization
+            )
+
+            # Create turn record
+            turn = ConversationTurn(
+                turn_number=turn_number,
+                agent_type=next_agent_type,
+                prompt=prompt,
+                response=response["text"],
+                status=TurnStatus.SUCCESS,
+                log_probs=response.get("log_probs"),
+                token_ids=response.get("token_ids")
+            )
+
+            # Extract and test new kernel code
+            new_kernel_code = self._extract_kernel_code(response["text"])
+            if new_kernel_code and new_kernel_code != conversation.current_kernel_code:
+                conversation.current_kernel_code = new_kernel_code
+                await self._test_kernel(conversation, turn, new_kernel_code)
+
+                # Check for performance improvement
+                new_performance = conversation.current_performance.get("speedup", 0.0)
+                if new_performance > best_performance:
+                    best_performance = new_performance
+                    turns_without_improvement = 0
                 else:
-                    next_value = values[t + 1]
-                
-                delta = rewards[t] + gamma * next_value - values[t]
-                advantages[t] = last_advantage = delta + gamma * lam * last_advantage
-        
-        # Normalize advantages
-        advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
-        
-        return advantages
+                    turns_without_improvement += 1
+            else:
+                # No new code generated
+                turn.status = TurnStatus.FAILURE
+                turns_without_improvement += 1
+
+            conversation.turns.append(turn)
+
+        # If we exit the loop without success, mark as incomplete
+        if not conversation.conversation_success:
+            if conversation.termination_reason == "":
+                conversation.termination_reason = "Maximum turns reached"
+
+    async def _test_kernel(
+        self,
+        conversation: CUDAConversationState,
+        turn: ConversationTurn,
+        kernel_code: str
+    ):
+        """Test kernel compilation and performance."""
+
+        turn_start_time = time.time()
+
+        try:
+            # Compile kernel
+            compilation_result = await self.compiler.compile_kernel(
+                kernel_code,
+                kernel_name=f"kernel_{conversation.conversation_id}_{turn.turn_number}"
+            )
+
+            turn.compilation_success = compilation_result.success
+            turn.context["compilation_result"] = compilation_result
+
+            if compilation_result.success:
+                # Benchmark kernel
+                test_cases = self._generate_test_cases(conversation.difficulty_tier)
+                benchmark_result = await self.benchmarker.benchmark_kernel(
+                    compilation_result.binary_path,
+                    compilation_result.kernel_name,
+                    test_inputs=[],  # Will be generated from test_cases
+                    test_cases=test_cases
+                )
+
+                turn.context["benchmark_result"] = benchmark_result
+
+                if benchmark_result.success and benchmark_result.functional_correct:
+                    # Update conversation performance
+                    conversation.current_performance = {
+                        "speedup": benchmark_result.speedup_vs_torch,
+                        "memory_bandwidth": benchmark_result.memory_bandwidth_gb_s,
+                        "execution_time": benchmark_result.execution_time_ms,
+                        "accuracy": benchmark_result.numerical_accuracy
+                    }
+
+                    turn.performance_metrics = conversation.current_performance.copy()
+                    turn.status = TurnStatus.SUCCESS
+                else:
+                    turn.status = TurnStatus.FAILURE
+                    turn.context["failure_reason"] = benchmark_result.error_message
+            else:
+                turn.status = TurnStatus.FAILURE
+                turn.context["failure_reason"] = compilation_result.stderr
+
+        except Exception as e:
+            turn.status = TurnStatus.FAILURE
+            turn.context["failure_reason"] = str(e)
+            self.logger.error(
+                "Kernel testing failed",
+                conversation_id=conversation.conversation_id,
+                turn_number=turn.turn_number,
+                error=str(e)
+            )
+
+        turn.execution_time = time.time() - turn_start_time
+
+    async def _final_evaluation(self, conversation: CUDAConversationState):
+        """Final evaluation and reward calculation."""
+
+        # Calculate final reward based on conversation outcome
+        final_reward = 0.0
+
+        # Base reward for compilation success
+        if conversation.turns and conversation.turns[-1].compilation_success:
+            final_reward += 0.3
+
+        # Performance reward
+        current_speedup = conversation.current_performance.get("speedup", 0.0)
+        target_speedup = conversation.target_performance.get("speedup", 2.0)
+
+        if current_speedup > 0:
+            performance_ratio = min(current_speedup / target_speedup, 2.0)
+            final_reward += 0.5 * performance_ratio
+
+        # Efficiency reward (fewer turns is better)
+        if conversation.conversation_success:
+            efficiency_bonus = max(0, (self.max_turns - len(conversation.turns)) / self.max_turns)
+            final_reward += 0.2 * efficiency_bonus
+
+        conversation.final_reward = final_reward
+
+    def _create_generator_prompt(self, problem: Dict[str, Any]) -> str:
+        """Create prompt for initial code generation."""
+        return f"""
+Generate a CUDA kernel to solve the following problem:
+
+Problem: {problem["description"]}
+
+Requirements:
+- Write efficient CUDA C++ code
+- Include proper error checking
+- Use appropriate grid and block dimensions
+- Optimize for the given problem size
+
+Please provide a complete CUDA kernel implementation.
+"""
+
+    def _create_optimizer_prompt(
+        self,
+        conversation: CUDAConversationState,
+        problem: Dict[str, Any]
+    ) -> str:
+        """Create prompt for optimization phase."""
+
+        current_perf = conversation.current_performance
+        last_turn = conversation.turns[-1]
+
+        return f"""
+Optimize the following CUDA kernel for better performance:
+
+Original Problem: {problem["description"]}
+
+Current Kernel:
+{conversation.current_kernel_code}
+
+Current Performance:
+- Speedup: {current_perf.get("speedup", 0.0):.2f}x
+- Memory Bandwidth: {current_perf.get("memory_bandwidth", 0.0):.2f} GB/s
+- Execution Time: {current_perf.get("execution_time", 0.0):.2f} ms
+
+Target Performance:
+- Speedup: {conversation.target_performance.get("speedup", 2.0):.2f}x
+
+Please provide an optimized version that improves performance. Consider:
+- Memory access patterns
+- Shared memory usage
+- Thread divergence
+- Occupancy optimization
+"""
+
+    def _create_fix_prompt(
+        self,
+        conversation: CUDAConversationState,
+        problem: Dict[str, Any]
+    ) -> str:
+        """Create prompt for fixing compilation errors."""
+
+        last_turn = conversation.turns[-1]
+        compilation_result = last_turn.context.get("compilation_result")
+
+        error_message = ""
+        if compilation_result:
+            error_message = compilation_result.stderr
+
+        return f"""
+Fix the compilation errors in the following CUDA kernel:
+
+Original Problem: {problem["description"]}
+
+Current Kernel (with errors):
+{conversation.current_kernel_code}
+
+Compilation Error:
+{error_message}
+
+Please provide a corrected version that compiles successfully.
+"""
+
+    def _extract_kernel_code(self, response: str) -> str:
+        """Extract CUDA kernel code from agent response."""
+
+        # Look for code blocks
+        # First try to find code in markdown code blocks
+        code_blocks = re.findall(r'```(?:cuda|cpp|c)?\n(.*?)\n```', response, re.DOTALL)
+
+        if code_blocks:
+            return code_blocks[0].strip()
+
+        # If no code blocks, look for __global__ keyword
+        global_match = re.search(r'(__global__.*?(?=\n\n|\n__|\\n#|\\Z))', response, re.DOTALL)
+        if global_match:
+            return global_match.group(1).strip()
+
+        # As fallback, return the entire response
+        return response.strip()
+
+    def _generate_test_cases(self, difficulty_tier: str) -> List[Dict[str, Any]]:
+        """Generate test cases based on difficulty tier."""
+
+        if difficulty_tier == "easy":
+            return [
+                {
+                    "input_shapes": [[1024], [1024]],
+                    "dtype": torch.float32,
+                    "grid_dims": (4, 1, 1),
+                    "block_dims": (256, 1, 1)
+                }
+            ]
+        elif difficulty_tier == "medium":
+            return [
+                {
+                    "input_shapes": [[4096], [4096]],
+                    "dtype": torch.float32,
+                    "grid_dims": (16, 1, 1),
+                    "block_dims": (256, 1, 1)
+                },
+                {
+                    "input_shapes": [[1024, 1024], [1024, 1024]],
+                    "dtype": torch.float32,
+                    "grid_dims": (32, 32, 1),
+                    "block_dims": (16, 16, 1)
+                }
+            ]
+        else:  # hard
+            return [
+                {
+                    "input_shapes": [[8192], [8192]],
+                    "dtype": torch.float32,
+                    "grid_dims": (32, 1, 1),
+                    "block_dims": (256, 1, 1)
+                },
+                {
+                    "input_shapes": [[2048, 2048], [2048, 2048]],
+                    "dtype": torch.float32,
+                    "grid_dims": (64, 64, 1),
+                    "block_dims": (16, 16, 1)
+                }
+            ]
