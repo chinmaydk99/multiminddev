@@ -23,7 +23,7 @@ classifiers = [
     "Topic :: Software Development :: Code Generators",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     # Core framework
     "pydantic>=2.0.0",
@@ -32,41 +32,34 @@ dependencies = [
     "click>=8.0.0",
     "rich>=13.0.0",
     "typer>=0.9.0",
-    # LangGraph and LangChain
-    "langgraph>=0.0.60",
-    "langchain>=0.1.0",
-    "langchain-core>=0.1.0",
-    "langchain-openai>=0.0.8",
-    "langchain-anthropic>=0.1.0",
-    # LLM providers
-    "openai>=1.0.0",
-    "anthropic>=0.18.0",
-    # Code execution and analysis
-    "docker>=6.0.0",
-    "ast-grep-py>=0.15.0",
-    "flake8>=6.0.0",
-    "black>=23.0.0",
-    "isort>=5.12.0",
-    "mypy>=1.5.0",
-    "bandit>=1.7.5",
-    # Async and concurrency
-    "asyncio>=3.4.3",
-    "aiofiles>=23.0.0",
-    "httpx>=0.24.0",
-    # Data processing
+    # Essential ML/Training dependencies (compatible with VERL)
+    "numpy<2.0.0",  # VERL constraint - prevents scipy import issues
     "pandas>=2.0.0",
-    "numpy>=1.24.0",
-    "jsonlines>=3.1.0",
+    "torch>=2.1.0,<2.8.0",  # Compatible with VERL and VLLM
+    "torchvision>=0.16.0,<0.25.0",
+    "transformers>=4.30.0,<5.0.0",
+    "datasets>=4.0.0",
+    "accelerate>=0.20.0",
+    "peft>=0.4.0",
+    "bitsandbytes>=0.41.0",  # For QLoRA
+    # VERL core dependencies
+    "ray[default]>=2.10.0",
+    "tensordict>=0.8.0,<=0.9.1,!=0.9.0",  # VERL constraint
+    "pyarrow>=19.0.0",
+    "dill",
+    "codetiming",
+    "hydra-core",
+    "pybind11",
+    "torchdata",
     # Monitoring and logging
     "structlog>=23.0.0",
     "wandb>=0.15.0",
-    # Ray for distributed computing
-    "ray[default]>=2.6.0",
-    "torch>=2.8.0",
-    "transformers>=4.55.0",
-    "datasets>=4.0.0",
-    "langchain-community>=0.3.27",
-    "langchain-huggingface>=0.3.1",
+    "tensorboard>=2.13.0",
+    # Essential utilities
+    "jsonlines>=3.1.0",
+    "aiofiles>=23.0.0",
+    "httpx>=0.24.0",
+    "packaging>=20.0",
 ]
 
 [project.optional-dependencies]
@@ -81,20 +74,21 @@ dev = [
 ]
 
 verl = [
-    "verl>=0.1.0",           # Main VERL framework
-    "torch>=2.0.0",
-    "transformers>=4.30.0",
-    "accelerate>=0.20.0",
-    "datasets>=2.14.0",
+    # VERL framework (installed via local verl directory)
+    # Core VERL dependencies for RL rollouts
+    "vllm>=0.7.3,<=0.9.1",  # Required for RL inference rollouts
+    # Performance optimizations
+    "liger-kernel",  # GPU performance
+    "flash-attn",    # Attention optimization
+    # Evaluation
+    "math-verify",   # Math evaluation
+    "trl<=0.9.6",    # TRL compatibility
 ]
 
 training = [
-    "torch>=2.0.0",
-    "transformers>=4.30.0",
-    "accelerate>=0.20.0",
-    "datasets>=2.14.0",
-    "tensorboard>=2.13.0",
-    "wandb>=0.15.0",
+    # All core training deps are now in main dependencies for consistency
+    # Additional training-specific dependencies
+    "evaluate>=0.4.0",  # Evaluation metrics
 ]
 
 cuda = [
@@ -133,9 +127,19 @@ phase3 = [
     "GPUtil>=1.4.0",                     # GPU monitoring
 ]
 
+# Note: These inference backends have complex dependency conflicts
+# Install separately as needed:
+# pip install sglang[srt,openai]==0.4.9.post6 --pre
+# pip install vllm>=0.7.3,<=0.9.1
+
 all = [
     "coding-framework[dev,verl,training,cuda,phase3]"
 ]
+
+# Note: sglang and vllm have conflicting torchvision requirements
+# Use either sglang OR vllm, not both:
+# uv sync --extra sglang  (for sglang backend)
+# uv sync --extra vllm    (for vllm backend)
 
 [project.urls]
 Homepage = "https://github.com/multiminddev/coding-framework"

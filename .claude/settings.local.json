@@ -49,7 +49,9 @@
       "Bash(*)",
       "Bash(rsync:*)",
       "Bash(tar:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "Bash(uv:*)",
+      "Bash(timeout:*)"
     ],
     "deny": []
   }

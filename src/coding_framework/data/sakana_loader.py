@@ -39,12 +39,13 @@ class SakanaDataLoader:
             self.dataset = load_dataset(
                 self.dataset_name,
                 cache_dir=self.cache_dir,
-                trust_remote_code=True
+                trust_remote_code=False
             )
             self.logger.info(
                 "SakanaAI dataset loaded",
-                num_train=len(self.dataset["train"]) if "train" in self.dataset else 0,
-                num_test=len(self.dataset["test"]) if "test" in self.dataset else 0
+                level_1=len(self.dataset["level_1"]) if "level_1" in self.dataset else 0,
+                level_2=len(self.dataset["level_2"]) if "level_2" in self.dataset else 0,
+                level_3=len(self.dataset["level_3"]) if "level_3" in self.dataset else 0
             )
         except Exception as e:
             self.logger.warning(f"Failed to load SakanaAI dataset: {e}, using synthetic data")
@@ -176,18 +177,12 @@ __global__ void matrix_multiply(float* A, float* B, float* C, int M, int N, int 
         if not self.curriculum_enabled:
             return
         
-        # Split by difficulty
-        train_data = self.dataset["train"] if "train" in self.dataset else []
-        
+        # Map SakanaAI levels to curriculum difficulties
         self.curriculum_data = {
-            "easy": [],
-            "medium": [],
-            "hard": []
+            "easy": list(self.dataset.get("level_1", [])),
+            "medium": list(self.dataset.get("level_2", [])),
+            "hard": list(self.dataset.get("level_3", []))
         }
-        
-        for example in train_data:
-            difficulty = self._infer_difficulty(example)
-            self.curriculum_data[difficulty].append(example)
         
         self.logger.info(
             "Curriculum data processed",
@@ -247,17 +242,26 @@ __global__ void matrix_multiply(float* A, float* B, float* C, int M, int N, int 
         
         example = random.choice(candidates)
         
-        # Standardize problem format
+        # Standardize problem format for SakanaAI dataset
         return {
-            "description": example.get("problem_description", ""),
+            "description": f"Optimize CUDA kernel for {example.get('Op_Name', 'operation')}",
             "difficulty": difficulty or self._infer_difficulty(example),
-            "reference_solution": example.get("cuda_kernel", ""),
+            "reference_solution": example.get("CUDA_Code", ""),
             "test_cases": self._generate_test_cases(example),
             "target_performance": self._extract_target_performance(example),
-            "baseline_performance": example.get("baseline_performance", {}),
+            "baseline_performance": {
+                "pytorch_native": example.get("PyTorch_Native_Runtime", 0),
+                "pytorch_compile": example.get("PyTorch_Compile_Runtime", 0),
+                "cuda_speedup_native": example.get("CUDA_Speedup_Native", 1),
+                "cuda_speedup_compile": example.get("CUDA_Speedup_Compile", 1)
+            },
             "metadata": {
                 "original_example": example,
-                "dataset": self.dataset_name
+                "dataset": self.dataset_name,
+                "kernel_name": example.get("Kernel_Name", ""),
+                "op_name": example.get("Op_Name", ""),
+                "task_id": example.get("Task_ID", ""),
+                "level_id": example.get("Level_ID", "")
             }
         }
     

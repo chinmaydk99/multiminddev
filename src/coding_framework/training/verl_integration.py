@@ -12,24 +12,39 @@ import ray
 import structlog
 import torch
 
-# VERL imports
+# VERL imports - Complete implementation
 try:
-    from verl import (
-        ActorRolloutRef,
-        CriticRef,
-        DataProto,
-        RayWorkerGroup,
-        RewardModelRef,
-        VERLTrainer,
-    )
-    from verl.trainer.dapo import DAPOTrainer
-    from verl.trainer.grpo import GRPOTrainer
-    from verl.trainer.ppo import PPOTrainer
-    from verl.utils.reward_score import get_reward_score
+    # Core VERL components
+    from verl.single_controller.ray import RayWorkerGroup
+    from verl.trainer.ppo.ray_trainer import RayPPOTrainer
+    
+    # Complete VERL worker configurations
+    from verl.single_controller.base import Worker
+    from verl.single_controller.ray import RayClassWithInitArgs
+    from verl.workers.rollout.vllm_rollout import VLLMRolloutWorker
+    from verl.workers.actor import ActorWorker
+    from verl.workers.critic import CriticWorker
+    from verl.workers.reference import ReferenceWorker
+    
+    # Training configurations
+    from verl.trainer.config import TrainerConfig, AlgoConfig, DataConfig
+    from verl.trainer.config import ActorRolloutRefConfig, CriticConfig as VERLCriticConfig
+    from verl.trainer.config import ModelConfig, OptimizerConfig, SchedulerConfig
+    
+    # VLLM specific imports
+    from verl.trainer.config import VLLMConfig
+    
+    COMPLETE_VERL_AVAILABLE = True
+    
+    # GRPO is PPO with specific config
+    GRPO_AVAILABLE = True  # GRPO is just PPO configuration
+    
     VERL_AVAILABLE = True
-except ImportError:
+    structlog.get_logger().info("VERL complete components successfully imported")
+except ImportError as e:
     VERL_AVAILABLE = False
-    structlog.get_logger().warning("VERL not available, using mock implementation")
+    structlog.get_logger().error(f"VERL is required but not available: {e}")
+    raise RuntimeError(f"VERL is required for this training script: {e}")
 
 # Dataset imports
 try:
@@ -755,11 +770,16 @@ class VERLTrainingConfig:
     generator_model: str = "Qwen/Qwen2.5-Coder-1.5B-Instruct"
     optimizer_model: str = "Qwen/Qwen2.5-Coder-0.5B-Instruct"
 
-    # GRPO specific
-    grpo_group_size: int = 16
-    grpo_kl_coef: float = 0.0
-    grpo_clip_ratio_low: float = 0.2
-    grpo_clip_ratio_high: float = 0.28
+    # Complete GRPO specific configuration
+    grpo_group_size: int = 16  # Group sampling size for GRPO
+    grpo_kl_coef: float = 0.02  # KL divergence coefficient
+    grpo_clip_ratio: float = 0.2  # PPO clipping ratio
+    grpo_entropy_coef: float = 0.01  # Entropy coefficient
+    grpo_value_loss_coef: float = 0.5  # Value loss coefficient (unused in GRPO)
+    grpo_max_grad_norm: float = 1.0  # Gradient clipping
+    grpo_temperature: float = 0.8  # Sampling temperature for rollouts
+    grpo_top_p: float = 0.9  # Top-p sampling
+    grpo_use_flash_attention: bool = True  # Use flash attention for memory efficiency
 
     # DAPO specific
     dapo_use_kl_in_reward: bool = False
@@ -839,9 +859,7 @@ class MultiAgentVERLTrainer:
     def _setup_distributed_training(self):
         """Initialize Ray cluster and VERL worker groups."""
         if not VERL_AVAILABLE:
-            self.logger.warning("VERL not available, using mock implementation")
-            self.trainer = MockVERLTrainer()
-            return
+            raise RuntimeError("VERL is required for distributed training but not available")
 
         # Initialize Ray cluster
         if not ray.is_initialized():
@@ -864,61 +882,255 @@ class MultiAgentVERLTrainer:
         self._setup_verl_trainer()
 
     def _setup_verl_workers(self):
-        """Setup VERL worker groups for distributed training."""
+        """Setup complete VERL worker groups for distributed training."""
         if not VERL_AVAILABLE:
             return
 
+        # Actor configuration for both generator and optimizer
+        actor_config = {
+            "model": {
+                "path": self.config.generator_model,
+                "backend": "fsdp",
+                "enable_gradient_checkpointing": True,
+                "use_flash_attention": True
+            },
+            "optim": {
+                "lr": self.config.learning_rate,
+                "eps": 1e-5,
+                "weight_decay": 0.01
+            },
+            "actor": {
+                "ppo_mini_batch_size": self.config.batch_size,
+                "ppo_micro_batch_size_per_gpu": 4,
+                "ppo_epochs": 2,
+                "use_kl_loss": True,
+                "kl_loss_coef": self.config.grpo_kl_coef,
+                "kl_loss_type": "low_var_kl",
+                "entropy_coeff": 0.01,
+                "loss_agg_mode": "token-mean",
+                "clip_ratio": 0.2
+            },
+            "fsdp_config": {
+                "param_offload": False,
+                "optimizer_offload": False,
+                "grad_offload": False,
+                "sharding_strategy": "FULL_SHARD"
+            }
+        }
+        
+        # Rollout configuration with VLLM
+        rollout_config = {
+            "rollout": {
+                "name": "vllm",
+                "gpu_memory_utilization": 0.6,
+                "tensor_model_parallel_size": min(2, self.config.num_gpus),
+                "max_tokens_per_batch": 8192,
+                "log_prob_micro_batch_size_per_gpu": 8,
+                "temperature": 0.8,
+                "top_p": 0.9,
+                "n": self.config.grpo_group_size,  # Group sampling for GRPO
+                "max_new_tokens": 1024
+            }
+        }
+        
+        # Reference model configuration
+        ref_config = {
+            "ref": {
+                "log_prob_micro_batch_size_per_gpu": 8,
+                "fsdp_config": {
+                    "param_offload": True,
+                    "optimizer_offload": True
+                }
+            }
+        }
+        
+        # Combined actor-rollout-ref configuration
+        combined_config = {**actor_config, **rollout_config, **ref_config}
+        
+        # Setup actor-rollout worker group with complete configuration
         self.actor_rollout_wg = RayWorkerGroup(
             world_size=self.config.num_gpus,
-            actor_rollout_ref=ActorRolloutRef(
-                model=self.config.generator_model,
-                tokenizer=self.config.generator_model,
-                rollout=RolloutConfig(
-                    temperature=0.7,
-                    top_p=0.9,
-                    top_k=50,
-                    max_new_tokens=1024,
-                    do_sample=True
-                )
+            worker_class_with_init_args=RayClassWithInitArgs(
+                cls=ActorWorker,
+                config=combined_config
             )
         )
 
-        if self.config.algorithm in ["ppo", "grpo"]:
+        # GRPO doesn't need critic, but setup for other algorithms
+        if self.config.algorithm in ["ppo"]:
+            critic_config = {
+                "model": {
+                    "path": self.config.generator_model,
+                    "backend": "fsdp"
+                },
+                "optim": {
+                    "lr": self.config.learning_rate * 0.5,  # Lower LR for critic
+                    "eps": 1e-5
+                },
+                "critic": {
+                    "ppo_mini_batch_size": self.config.batch_size,
+                    "ppo_micro_batch_size_per_gpu": 4,
+                    "ppo_epochs": 2
+                }
+            }
+            
             self.critic_wg = RayWorkerGroup(
                 world_size=min(4, self.config.num_gpus),
-                critic_ref=CriticRef(
-                    model=self.config.optimizer_model,
-                    tokenizer=self.config.optimizer_model
+                worker_class_with_init_args=RayClassWithInitArgs(
+                    cls=CriticWorker,
+                    config=critic_config
                 )
             )
+        else:
+            self.critic_wg = None
+            
+        self.logger.info(
+            "VERL worker groups configured",
+            algorithm=self.config.algorithm,
+            actor_workers=self.config.num_gpus,
+            critic_workers=min(4, self.config.num_gpus) if self.critic_wg else 0,
+            grpo_group_size=self.config.grpo_group_size
+        )
 
     def _setup_verl_trainer(self):
-        """Initialize VERL trainer based on algorithm."""
+        """Initialize complete VERL trainer with full configuration."""
         if not VERL_AVAILABLE:
             return
 
+        # Complete trainer configuration based on GRPO examples
+        trainer_config = TrainerConfig(
+            project_name="CUDA-MultiTurn-RL-GRPO",
+            experiment_name=f"grpo_cuda_{int(time.time())}",
+            total_epochs=self.config.num_epochs,
+            save_freq=self.config.save_freq,
+            test_freq=5,
+            critic_warmup=0,  # No critic warmup for GRPO
+            logger=['"console"', '"wandb"'],
+            n_gpus_per_node=self.config.num_gpus,
+            nnodes=self.config.num_nodes
+        )
+        
+        # Data configuration for multi-turn conversations
+        data_config = DataConfig(
+            train_batch_size=self.config.batch_size,
+            max_prompt_length=2048,
+            max_response_length=1024,
+            truncation='error',
+            filter_overlong_prompts=True
+        )
+        
+        # Algorithm configuration for GRPO
+        algo_config = AlgoConfig(
+            adv_estimator="grpo",  # Key GRPO setting
+            use_kl_in_reward=False,  # GRPO doesn't use KL in reward
+            gamma=0.99,
+            lam=0.95,
+            cliprange=0.2,
+            cliprange_value=0.2,
+            vf_coef=0.5,
+            ent_coef=0.01,
+            max_grad_norm=1.0
+        )
+        
+        # Model configuration
+        model_config = ModelConfig(
+            path=self.config.generator_model,
+            backend="fsdp",
+            enable_gradient_checkpointing=True,
+            use_flash_attention=True,
+            dtype="bf16"
+        )
+        
+        # Actor-Rollout-Reference complete configuration
+        actor_rollout_ref_config = ActorRolloutRefConfig(
+            actor={
+                "optim": {
+                    "lr": self.config.learning_rate,
+                    "eps": 1e-5,
+                    "weight_decay": 0.01,
+                    "beta1": 0.9,
+                    "beta2": 0.999
+                },
+                "ppo_mini_batch_size": self.config.batch_size,
+                "ppo_micro_batch_size_per_gpu": 4,
+                "ppo_epochs": 2,
+                "use_kl_loss": True,  # GRPO uses direct KL loss
+                "kl_loss_coef": self.config.grpo_kl_coef,
+                "kl_loss_type": "low_var_kl",
+                "entropy_coeff": 0.01,
+                "loss_agg_mode": "token-mean",
+                "clip_ratio": 0.2,
+                "fsdp_config": {
+                    "param_offload": False,
+                    "optimizer_offload": False,
+                    "grad_offload": False,
+                    "sharding_strategy": "FULL_SHARD"
+                }
+            },
+            rollout={
+                "name": "vllm",
+                "gpu_memory_utilization": 0.6,
+                "tensor_model_parallel_size": min(2, self.config.num_gpus),
+                "log_prob_micro_batch_size_per_gpu": 8,
+                "temperature": 0.8,
+                "top_p": 0.9,
+                "n": self.config.grpo_group_size,  # Group sampling
+                "max_new_tokens": 1024,
+                "stop_sequences": ["```", "\n\n#", "\n\nclass", "\n\ndef"]
+            },
+            ref={
+                "log_prob_micro_batch_size_per_gpu": 8,
+                "fsdp_config": {
+                    "param_offload": True,
+                    "optimizer_offload": True
+                }
+            },
+            model=model_config
+        )
+        
         if self.config.algorithm == "grpo":
-            self.trainer = GRPOTrainer(
+            # GRPO uses PPO trainer with complete configuration
+            self.trainer = RayPPOTrainer(
+                config=trainer_config,
+                data_config=data_config,
+                algo_config=algo_config,
+                actor_rollout_ref_config=actor_rollout_ref_config,
                 actor_rollout_wg=self.actor_rollout_wg,
+                critic_wg=None  # GRPO doesn't use critic
+            )
+            
+            self.logger.info(
+                "Complete GRPO trainer configured", 
                 group_size=self.config.grpo_group_size,
                 kl_coef=self.config.grpo_kl_coef,
-                clip_ratio_low=self.config.grpo_clip_ratio_low,
-                clip_ratio_high=self.config.grpo_clip_ratio_high,
-                learning_rate=self.config.learning_rate
-            )
-        elif self.config.algorithm == "dapo":
-            self.trainer = DAPOTrainer(
-                actor_rollout_wg=self.actor_rollout_wg,
-                use_kl_in_reward=self.config.dapo_use_kl_in_reward,
-                loss_agg_mode=self.config.dapo_loss_agg_mode,
-                learning_rate=self.config.learning_rate
+                learning_rate=self.config.learning_rate,
+                batch_size=self.config.batch_size
             )
         elif self.config.algorithm == "ppo":
-            self.trainer = PPOTrainer(
-                actor_rollout_wg=self.actor_rollout_wg,
-                critic_wg=self.critic_wg,
-                learning_rate=self.config.learning_rate
+            # PPO with critic configuration
+            critic_config = VERLCriticConfig(
+                optim={
+                    "lr": self.config.learning_rate * 0.5,
+                    "eps": 1e-5
+                },
+                ppo_mini_batch_size=self.config.batch_size,
+                ppo_micro_batch_size_per_gpu=4,
+                ppo_epochs=2
             )
+            
+            self.trainer = RayPPOTrainer(
+                config=trainer_config,
+                data_config=data_config,
+                algo_config=algo_config,
+                actor_rollout_ref_config=actor_rollout_ref_config,
+                critic_config=critic_config,
+                actor_rollout_wg=self.actor_rollout_wg,
+                critic_wg=self.critic_wg
+            )
+            
+            self.logger.info("Complete PPO trainer configured with critic")
+        else:
+            raise ValueError(f"Unsupported algorithm: {self.config.algorithm}")
 
     async def train(self) -> Dict[str, Any]:
         """Enhanced training loop with curriculum learning and safety."""
