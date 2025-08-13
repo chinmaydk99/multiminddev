@@ -190,6 +190,49 @@ Generate ONLY the kernel code without explanations."""
                 processing_time=0.0
             )
 
+    async def generate_response(self, prompt: str, **kwargs) -> str:
+        """
+        Compatibility method for conversation manager.
+        
+        Args:
+            prompt: Input prompt for generation
+            **kwargs: Additional generation parameters
+            
+        Returns:
+            Generated response as string
+        """
+        try:
+            # Filter out incompatible parameters
+            filtered_kwargs = {
+                k: v for k, v in kwargs.items() 
+                if k in ['max_new_tokens', 'temperature', 'top_p', 'top_k']
+            }
+            # Convert max_tokens to max_new_tokens if present
+            if 'max_tokens' in kwargs:
+                filtered_kwargs['max_new_tokens'] = kwargs['max_tokens']
+                
+            result = await self.generate_with_log_probs(prompt, **filtered_kwargs)
+            
+            # Debug logging
+            self.logger.debug(f"Generation result type: {type(result)}")
+            self.logger.debug(f"Generation result: {result}")
+            
+            # Handle different return types
+            if hasattr(result, 'text'):
+                return result.text
+            elif isinstance(result, dict) and 'text' in result:
+                return result['text']
+            elif isinstance(result, str):
+                return result
+            else:
+                return str(result)
+                
+        except Exception as e:
+            self.logger.error(f"Error in generate_response: {e}")
+            import traceback
+            self.logger.error(f"Traceback: {traceback.format_exc()}")
+            return f"Error generating response: {str(e)}"
+
 
 class TrainableCUDAOptimizerAgent(TrainableAgent):
     """
@@ -408,6 +451,45 @@ Return ONLY the optimized kernel code."""
                 error=str(e),
                 processing_time=0.0
             )
+
+    async def generate_response(self, prompt: str, **kwargs) -> str:
+        """
+        Compatibility method for conversation manager.
+        
+        Args:
+            prompt: Input prompt for generation
+            **kwargs: Additional generation parameters
+            
+        Returns:
+            Generated response as string
+        """
+        try:
+            # Filter out incompatible parameters
+            filtered_kwargs = {
+                k: v for k, v in kwargs.items() 
+                if k in ['max_new_tokens', 'temperature', 'top_p', 'top_k']
+            }
+            # Convert max_tokens to max_new_tokens if present
+            if 'max_tokens' in kwargs:
+                filtered_kwargs['max_new_tokens'] = kwargs['max_tokens']
+                
+            result = await self.generate_with_log_probs(prompt, **filtered_kwargs)
+            
+            # Handle different return types
+            if hasattr(result, 'text'):
+                return result.text
+            elif isinstance(result, dict) and 'text' in result:
+                return result['text']
+            elif isinstance(result, str):
+                return result
+            else:
+                return str(result)
+                
+        except Exception as e:
+            self.logger.error(f"Error in generate_response: {e}")
+            import traceback
+            self.logger.error(f"Traceback: {traceback.format_exc()}")
+            return f"Error generating response: {str(e)}"
 
 
 class TrainableCUDATesterAgent(TrainableAgent):
@@ -694,3 +776,42 @@ Provide actionable feedback and improvement suggestions."""
                 error=str(e),
                 processing_time=0.0
             )
+
+    async def generate_response(self, prompt: str, **kwargs) -> str:
+        """
+        Compatibility method for conversation manager.
+        
+        Args:
+            prompt: Input prompt for generation
+            **kwargs: Additional generation parameters
+            
+        Returns:
+            Generated response as string
+        """
+        try:
+            # Filter out incompatible parameters
+            filtered_kwargs = {
+                k: v for k, v in kwargs.items() 
+                if k in ['max_new_tokens', 'temperature', 'top_p', 'top_k']
+            }
+            # Convert max_tokens to max_new_tokens if present
+            if 'max_tokens' in kwargs:
+                filtered_kwargs['max_new_tokens'] = kwargs['max_tokens']
+                
+            result = await self.generate_with_log_probs(prompt, **filtered_kwargs)
+            
+            # Handle different return types
+            if hasattr(result, 'text'):
+                return result.text
+            elif isinstance(result, dict) and 'text' in result:
+                return result['text']
+            elif isinstance(result, str):
+                return result
+            else:
+                return str(result)
+                
+        except Exception as e:
+            self.logger.error(f"Error in generate_response: {e}")
+            import traceback
+            self.logger.error(f"Traceback: {traceback.format_exc()}")
+            return f"Error generating response: {str(e)}"

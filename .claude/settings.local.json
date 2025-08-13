@@ -51,7 +51,8 @@
       "Bash(tar:*)",
       "Bash(true)",
       "Bash(uv:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(del run_multiturn_rl_training_server.py trainable_agent_server.py trainable_cuda_agents_server.py)"
     ],
     "deny": []
   }

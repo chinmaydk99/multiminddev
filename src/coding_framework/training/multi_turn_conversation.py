@@ -163,19 +163,22 @@ class MultiTurnConversationManager:
             temperature=0.7
         )
 
+        # Handle response - it's a string, not a dict
+        response_text = generator_response if isinstance(generator_response, str) else str(generator_response)
+
         # Record turn
         turn = ConversationTurn(
             turn_number=0,
             agent_type=AgentType.GENERATOR,
             prompt=generator_prompt,
-            response=generator_response["text"],
+            response=response_text,
             status=TurnStatus.SUCCESS,  # Will be updated after testing
-            log_probs=generator_response.get("log_probs"),
-            token_ids=generator_response.get("token_ids")
+            log_probs=None,  # Not available from generate_response
+            token_ids=None   # Not available from generate_response
         )
 
         # Extract kernel code from response
-        kernel_code = self._extract_kernel_code(generator_response["text"])
+        kernel_code = self._extract_kernel_code(response_text)
         conversation.current_kernel_code = kernel_code
 
         # Test initial generation
@@ -226,19 +229,22 @@ class MultiTurnConversationManager:
                 temperature=0.5  # Slightly more conservative in optimization
             )
 
+            # Handle response - it's a string, not a dict
+            response_text = response if isinstance(response, str) else str(response)
+
             # Create turn record
             turn = ConversationTurn(
                 turn_number=turn_number,
                 agent_type=next_agent_type,
                 prompt=prompt,
-                response=response["text"],
+                response=response_text,
                 status=TurnStatus.SUCCESS,
-                log_probs=response.get("log_probs"),
-                token_ids=response.get("token_ids")
+                log_probs=None,  # Not available from generate_response
+                token_ids=None   # Not available from generate_response
             )
 
             # Extract and test new kernel code
-            new_kernel_code = self._extract_kernel_code(response["text"])
+            new_kernel_code = self._extract_kernel_code(response_text)
             if new_kernel_code and new_kernel_code != conversation.current_kernel_code:
                 conversation.current_kernel_code = new_kernel_code
                 await self._test_kernel(conversation, turn, new_kernel_code)

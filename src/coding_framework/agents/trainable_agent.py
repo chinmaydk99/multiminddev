@@ -295,7 +295,8 @@ class TrainableAgent(ABC):
                     )
         
         # Extract generated tokens (excluding prompt)
-        generated_ids = outputs.sequences[:, inputs.input_ids.shape[1]:]
+        prompt_length = inputs["input_ids"].shape[1]
+        generated_ids = outputs.sequences[:, prompt_length:]
         
         # Calculate log probabilities if we have scores
         log_probs = None
