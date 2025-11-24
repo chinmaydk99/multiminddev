@@ -34,8 +34,9 @@ class BenchmarkResult:
     error_message: str = ""
     benchmark_details: Optional[Dict[str, Any]] = None
 
-class CUDABenchmarker:
-    """Production CUDA kernel benchmarker with comprehensive metrics."""
+
+class HIPBenchmarker:
+    """Production HIP kernel benchmarker with comprehensive metrics for AMD ROCm."""
 
     def __init__(
         self,
@@ -48,24 +49,46 @@ class CUDABenchmarker:
         self.memory_check_tolerance = memory_check_tolerance
         self.logger = structlog.get_logger()
 
-        # Initialize CUDA context
-        self._initialize_cuda_context()
+        # Initialize ROCm context (PyTorch uses torch.cuda API for ROCm too)
+        self._initialize_rocm_context()
 
-    def _initialize_cuda_context(self):
-        """Initialize CUDA context and check GPU availability."""
+    def _initialize_rocm_context(self):
+        """Initialize ROCm context and check GPU availability."""
+        # PyTorch with ROCm uses the same torch.cuda API
         if not torch.cuda.is_available():
-            raise RuntimeError("CUDA not available for benchmarking")
+            raise RuntimeError("ROCm/HIP not available for benchmarking")
 
         self.device = torch.cuda.current_device()
         self.device_props = torch.cuda.get_device_properties(self.device)
 
         self.logger.info(
-            "CUDA benchmarker initialized",
+            "HIP benchmarker initialized",
             device=self.device,
             device_name=self.device_props.name,
-            compute_capability=f"{self.device_props.major}.{self.device_props.minor}",
+            gcn_arch=self._get_gcn_arch(),
             total_memory_gb=self.device_props.total_memory / (1024**3)
         )
+
+    def _get_gcn_arch(self) -> str:
+        """Get the GCN/RDNA architecture string for the AMD GPU."""
+        # PyTorch with ROCm exposes this through device properties
+        device_name = self.device_props.name.lower()
+
+        # Map device names to architectures
+        if "mi300" in device_name:
+            return "CDNA3 (gfx942)"
+        elif "mi250" in device_name or "mi210" in device_name:
+            return "CDNA2 (gfx90a)"
+        elif "mi100" in device_name:
+            return "CDNA (gfx908)"
+        elif "7900" in device_name:
+            return "RDNA3 (gfx1100)"
+        elif "6900" in device_name or "6800" in device_name:
+            return "RDNA2 (gfx1030)"
+        elif "vega" in device_name:
+            return "GCN5 (gfx906)"
+        else:
+            return f"Unknown ({device_name})"
 
     async def benchmark_kernel(
         self,
@@ -76,7 +99,7 @@ class CUDABenchmarker:
         test_cases: Optional[List[Dict[str, Any]]] = None
     ) -> BenchmarkResult:
         """
-        Benchmark CUDA kernel against test cases with comprehensive metrics.
+        Benchmark HIP kernel against test cases with comprehensive metrics.
         
         Args:
             binary_path: Path to compiled kernel shared library
@@ -100,7 +123,7 @@ class CUDABenchmarker:
                 ctypes.c_int,                     # num_args
                 ctypes.c_uint, ctypes.c_uint, ctypes.c_uint,  # grid dims
                 ctypes.c_uint, ctypes.c_uint, ctypes.c_uint,  # block dims
-                ctypes.c_size_t                   # shared memory
+                ctypes.c_size_t                   # shared memory (LDS)
             ]
             launch_func.restype = None
 
@@ -156,7 +179,7 @@ class CUDABenchmarker:
             "dtype": test_inputs[0].dtype,
             "grid_dims": (32, 1, 1),
             "block_dims": (256, 1, 1),
-            "shared_memory": 0
+            "shared_memory": 0  # LDS memory
         }
 
         # Generate expected output (simple heuristic)
@@ -176,7 +199,7 @@ class CUDABenchmarker:
                     test_case["block_dims"][0], test_case["block_dims"][1], test_case["block_dims"][2],
                     test_case["shared_memory"]
                 )
-                torch.cuda.synchronize()
+                torch.cuda.synchronize()  # Works for ROCm via PyTorch
             except Exception as e:
                 return BenchmarkResult(
                     success=False,
@@ -195,7 +218,7 @@ class CUDABenchmarker:
             torch.cuda.empty_cache()
             memory_before = torch.cuda.memory_allocated(self.device)
 
-            # Time execution
+            # Time execution using HIP events (via PyTorch's cuda API)
             torch.cuda.synchronize()
             start_event = torch.cuda.Event(enable_timing=True)
             end_event = torch.cuda.Event(enable_timing=True)
@@ -233,7 +256,7 @@ class CUDABenchmarker:
         # Calculate performance metrics
         avg_execution_time = statistics.mean(execution_times)
 
-        # Memory bandwidth calculation (simplified)
+        # Memory bandwidth calculation (HBM2/HBM3 on AMD GPUs)
         total_bytes = sum(tensor.numel() * tensor.element_size() for tensor in all_tensors)
         memory_bandwidth = (total_bytes / (1024**3)) / (avg_execution_time / 1000)  # GB/s
 
@@ -261,7 +284,8 @@ class CUDABenchmarker:
                 "execution_times": execution_times,
                 "memory_usage": memory_stats,
                 "test_case_params": test_case,
-                "total_data_bytes": total_bytes
+                "total_data_bytes": total_bytes,
+                "gpu_arch": self._get_gcn_arch()
             }
         )
 
@@ -278,7 +302,7 @@ class CUDABenchmarker:
         data_type = test_case.get("dtype", torch.float32)
         grid_dims = test_case.get("grid_dims", (32, 1, 1))
         block_dims = test_case.get("block_dims", (256, 1, 1))
-        shared_memory = test_case.get("shared_memory", 0)
+        shared_memory = test_case.get("shared_memory", 0)  # LDS memory
 
         # Generate test data
         gpu_inputs, expected_output = self._generate_test_data(input_shapes, data_type)
@@ -360,7 +384,7 @@ class CUDABenchmarker:
         # Calculate performance metrics
         avg_execution_time = statistics.mean(execution_times)
 
-        # Memory bandwidth calculation (simplified)
+        # Memory bandwidth calculation
         total_bytes = sum(tensor.numel() * tensor.element_size() for tensor in gpu_inputs + [gpu_output])
         memory_bandwidth = (total_bytes / (1024**3)) / (avg_execution_time / 1000)  # GB/s
 
@@ -566,6 +590,8 @@ class CUDABenchmarker:
             peak_memory_usage_mb=max([r.peak_memory_usage_mb for r in successful_results]),
             benchmark_details={
                 "num_test_cases": len(successful_results),
-                "individual_results": successful_results
+                "individual_results": successful_results,
+                "gpu_arch": self._get_gcn_arch()
             }
         )
+

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Multi-Turn RL Training Script using VERL and GRPO.
+Multi-Turn RL Training Script using VERL and GRPO for AMD ROCm.
 This script handles the RL phase after SFT checkpoints are available.
-Requires Docker for safe CUDA compilation and multi-GPU setup.
+Requires Docker for safe HIP compilation and multi-GPU setup on AMD GPUs.
 """
 
 import os
@@ -23,14 +23,14 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 # Import our VERL integration and multi-turn components
 from coding_framework.training.verl_integration import MultiAgentVERLTrainer
 from coding_framework.training.multi_turn_conversation import MultiTurnConversationManager
-from coding_framework.training.reward_functions.cuda_performance_reward import CUDAPerformanceReward
-from coding_framework.data.data_pipeline import CUDADataPipeline
-from coding_framework.cuda.compiler import CUDACompiler
-from coding_framework.cuda.benchmarker import CUDABenchmarker
-from coding_framework.agents.trainable_cuda_agents import (
-    TrainableCUDAGeneratorAgent,
-    TrainableCUDAOptimizerAgent,
-    TrainableCUDATesterAgent
+from coding_framework.training.reward_functions.hip_performance_reward import HIPPerformanceReward
+from coding_framework.data.data_pipeline import HIPDataPipeline
+from coding_framework.hip.compiler import HIPCompiler
+from coding_framework.hip.benchmarker import HIPBenchmarker
+from coding_framework.agents.trainable_hip_agents import (
+    TrainableHIPGeneratorAgent,
+    TrainableHIPOptimizerAgent,
+    TrainableHIPTesterAgent
 )
 
 import wandb
@@ -72,12 +72,12 @@ class MultiTurnRLConfig:
     
     # Curriculum configuration (helps with exploration efficiency)
     curriculum_enabled: bool = True      # Progressive difficulty for better sample efficiency
-    start_difficulty: str = "easy"       # Begin with simpler CUDA problems
+    start_difficulty: str = "easy"       # Begin with simpler HIP problems
     advancement_threshold: float = 0.7   # Success rate needed to advance difficulty
     
     # Paths
     output_dir: str = "./rl_checkpoints"
-    wandb_project: str = "CUDA-MultiTurn-RL"
+    wandb_project: str = "HIP-MultiTurn-RL"
     
     # Safety & Compilation
     use_docker_sandbox: bool = True
@@ -125,7 +125,7 @@ class MultiTurnRLTrainer:
         available_gpus = torch.cuda.device_count()
         
         if available_gpus == 0:
-            raise RuntimeError("No CUDA GPUs available")
+            raise RuntimeError("No ROCm GPUs available")
         
         self.logger.info(f"Available GPUs: {available_gpus}, Configured: {self.config.num_gpus}")
         
@@ -237,37 +237,37 @@ class MultiTurnRLTrainer:
     
     def _initialize_components(self):
         """Initialize all training components."""
-        # Data pipeline with curriculum
-        self.data_pipeline = CUDADataPipeline(
-            dataset_name="SakanaAI/AI-CUDA-Engineer-Archive",
+        # Data pipeline with curriculum for HIP/ROCm
+        self.data_pipeline = HIPDataPipeline(
+            dataset_name="SakanaAI/AI-CUDA-Engineer-Archive",  # Will convert to HIP
             cache_dir="./cache/datasets",
             curriculum_enabled=self.config.curriculum_enabled,
             initial_tier=self.config.start_difficulty
         )
         
-        # CUDA compilation and benchmarking
-        self.compiler = CUDACompiler(use_docker=self.config.use_docker_sandbox)
-        self.benchmarker = CUDABenchmarker()
+        # HIP compilation and benchmarking for AMD ROCm
+        self.compiler = HIPCompiler(use_docker=self.config.use_docker_sandbox)
+        self.benchmarker = HIPBenchmarker()
         
-        # Reward function
-        self.reward_function = CUDAPerformanceReward(
+        # Reward function for HIP
+        self.reward_function = HIPPerformanceReward(
             target_speedup=self.config.target_speedup
         )
         
         # Load trained agents with dynamic GPU distribution
         gpu_allocation = self._calculate_gpu_distribution()
         
-        self.generator_agent = TrainableCUDAGeneratorAgent(
+        self.generator_agent = TrainableHIPGeneratorAgent(
             model_name=self.config.generator_checkpoint,
-            device=f"cuda:{gpu_allocation['generator']}"
+            device=f"cuda:{gpu_allocation['generator']}"  # PyTorch ROCm uses cuda API
         )
-        self.optimizer_agent = TrainableCUDAOptimizerAgent(
+        self.optimizer_agent = TrainableHIPOptimizerAgent(
             model_name=self.config.optimizer_checkpoint,
-            device=f"cuda:{gpu_allocation['optimizer']}"
+            device=f"cuda:{gpu_allocation['optimizer']}"  # PyTorch ROCm uses cuda API
         )
-        self.tester_agent = TrainableCUDATesterAgent(
+        self.tester_agent = TrainableHIPTesterAgent(
             model_name=self.config.base_model,
-            device=f"cuda:{gpu_allocation['tester']}"
+            device=f"cuda:{gpu_allocation['tester']}"  # PyTorch ROCm uses cuda API
         )
         
         self.logger.info("GPU allocation", **gpu_allocation)

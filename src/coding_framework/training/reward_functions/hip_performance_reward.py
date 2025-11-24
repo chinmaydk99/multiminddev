@@ -24,8 +24,9 @@ class RewardComponents:
             weights.get("code_quality", 0.05) * self.code_quality_score
         )
 
-class CUDAPerformanceReward:
-    """Comprehensive CUDA performance reward function."""
+
+class HIPPerformanceReward:
+    """Comprehensive HIP performance reward function for AMD ROCm."""
 
     def __init__(
         self,
@@ -62,7 +63,7 @@ class CUDAPerformanceReward:
         context: Dict[str, Any]
     ) -> Tuple[float, RewardComponents]:
         """
-        Calculate comprehensive CUDA performance reward.
+        Calculate comprehensive HIP performance reward.
         
         Returns:
             Tuple of (total_reward, reward_components)
@@ -106,7 +107,7 @@ class CUDAPerformanceReward:
         final_score = max(0.0, min(2.0, final_score))
 
         self.logger.debug(
-            "Reward calculated",
+            "HIP reward calculated",
             total_reward=final_score,
             compilation=components.compilation_success,
             correctness=components.functional_correctness,
@@ -135,17 +136,18 @@ class CUDAPerformanceReward:
             warning_penalty = min(len(compilation_result.compilation_warnings) * 0.1, 0.3)
             base_reward -= warning_penalty
 
-        # Bonus for good register usage
+        # Bonus for good VGPR (Vector General Purpose Register) usage
         if compilation_result.register_pressure > 0:
-            # Optimal register usage is typically 32-64 registers per thread
+            # Optimal VGPR usage varies by AMD GPU architecture
+            # Typically 32-64 VGPRs is good for occupancy
             if 16 <= compilation_result.register_pressure <= 64:
                 base_reward += 0.1
             elif compilation_result.register_pressure > 128:
-                base_reward -= 0.2  # High register pressure is bad
+                base_reward -= 0.2  # High VGPR pressure reduces occupancy
 
-        # Bonus for reasonable shared memory usage
+        # Bonus for reasonable LDS (Local Data Share) usage
         if compilation_result.shared_memory_usage > 0:
-            # Using shared memory is generally good for optimization
+            # Using LDS is generally good for optimization
             base_reward += 0.1
 
         return max(0.0, min(1.0, base_reward))
@@ -209,9 +211,9 @@ class CUDAPerformanceReward:
         secondary_score = 0.0
 
         if hasattr(benchmark_result, 'memory_bandwidth_gb_s'):
-            # Good memory bandwidth for modern GPUs is 500-1000 GB/s
+            # Good memory bandwidth for AMD GPUs (HBM2/HBM3) is 500-1600 GB/s
             bandwidth = benchmark_result.memory_bandwidth_gb_s
-            bandwidth_score = min(bandwidth / 800.0, 1.0)  # Normalize to 800 GB/s
+            bandwidth_score = min(bandwidth / 1000.0, 1.0)  # Normalize to 1000 GB/s (MI250 level)
             secondary_score += self.memory_bandwidth_weight * bandwidth_score
 
         if hasattr(benchmark_result, 'compute_throughput_gflops'):
@@ -221,7 +223,7 @@ class CUDAPerformanceReward:
             secondary_score += self.compute_efficiency_weight * throughput_score
 
         if hasattr(benchmark_result, 'occupancy_percent'):
-            # Good occupancy is typically 50-100%
+            # Good occupancy is typically 50-100% (AMD wavefront occupancy)
             occupancy = benchmark_result.occupancy_percent / 100.0
             occupancy_score = min(occupancy / 0.75, 1.0)  # Normalize to 75% occupancy
             secondary_score += self.occupancy_weight * occupancy_score
@@ -245,17 +247,17 @@ class CUDAPerformanceReward:
                 memory_efficiency = 1.0 / (1.0 + memory_mb / 1000.0)  # Penalty for using >1GB
                 efficiency_score += 0.4 * memory_efficiency
 
-        # Register efficiency
+        # VGPR efficiency (AMD-specific)
         if compilation_result and compilation_result.register_pressure > 0:
-            registers = compilation_result.register_pressure
-            if registers <= 32:
-                register_efficiency = 1.0
-            elif registers <= 64:
+            vgprs = compilation_result.register_pressure
+            if vgprs <= 32:
+                register_efficiency = 1.0  # Excellent for occupancy
+            elif vgprs <= 64:
                 register_efficiency = 0.8
-            elif registers <= 96:
+            elif vgprs <= 96:
                 register_efficiency = 0.6
             else:
-                register_efficiency = 0.2  # Very high register usage
+                register_efficiency = 0.2  # Very high VGPR usage
 
             efficiency_score += 0.3 * register_efficiency
 
@@ -276,11 +278,11 @@ class CUDAPerformanceReward:
         return max(0.0, min(1.0, efficiency_score))
 
     def _calculate_code_quality_reward(self, generated_code: str, compilation_result) -> float:
-        """Calculate reward for code quality and best practices."""
+        """Calculate reward for code quality and best practices in HIP."""
 
         quality_score = 0.5  # Start with neutral score
 
-        # Check for CUDA best practices
+        # Check for HIP best practices
         code_lower = generated_code.lower()
 
         # Positive indicators
@@ -288,7 +290,7 @@ class CUDAPerformanceReward:
             quality_score += 0.1  # Using synchronization
 
         if '__shared__' in generated_code:
-            quality_score += 0.1  # Using shared memory
+            quality_score += 0.1  # Using LDS (Local Data Share)
 
         if 'coalesced' in code_lower or 'coalesce' in code_lower:
             quality_score += 0.1  # Mentions memory coalescing
@@ -296,9 +298,13 @@ class CUDAPerformanceReward:
         if 'occupancy' in code_lower:
             quality_score += 0.05  # Considers occupancy
 
-        # Check for error handling
-        if 'cudaGetLastError' in generated_code or 'CUDA_CHECK' in generated_code:
+        # Check for HIP error handling
+        if 'hipGetLastError' in generated_code or 'HIP_CHECK' in generated_code:
             quality_score += 0.1  # Good error handling
+
+        # Check for HIP runtime includes
+        if 'hip/hip_runtime.h' in generated_code:
+            quality_score += 0.05  # Proper HIP includes
 
         # Negative indicators
         if 'goto' in code_lower:
@@ -306,6 +312,10 @@ class CUDAPerformanceReward:
 
         if generated_code.count('malloc') > 0 and generated_code.count('free') == 0:
             quality_score -= 0.2  # Memory leaks
+
+        # AMD-specific quality checks
+        if 'hipMalloc' in generated_code and 'hipFree' not in generated_code:
+            quality_score -= 0.15  # HIP memory leak
 
         # Check compilation warnings for quality issues
         if compilation_result and compilation_result.compilation_warnings:
@@ -349,7 +359,7 @@ class CUDAPerformanceReward:
         """Generate human-readable explanation of reward calculation."""
 
         explanation = f"""
-Reward Breakdown:
+HIP/ROCm Reward Breakdown:
 - Compilation Success: {components.compilation_success:.3f}
 - Functional Correctness: {components.functional_correctness:.3f}
 - Performance Score: {components.performance_score:.3f}
@@ -360,3 +370,4 @@ Reward Breakdown:
 Total Score: {components.total_score(self.reward_weights):.3f}
 """
         return explanation.strip()
+

@@ -20,30 +20,31 @@ class CompilationResult:
     compilation_time: float = 0.0
     kernel_name: str = ""
 
-    # CUDA-specific metrics
-    register_pressure: int = 0  # Registers per thread
-    shared_memory_usage: int = 0  # Bytes of shared memory
+    # HIP/ROCm-specific metrics
+    register_pressure: int = 0  # VGPRs (Vector General Purpose Registers) per thread
+    shared_memory_usage: int = 0  # Bytes of LDS (Local Data Share) memory
     compilation_warnings: List[str] = field(default_factory=list)
-    ptx_code: Optional[str] = None
+    asm_code: Optional[str] = None  # AMD GCN/RDNA assembly instead of PTX
     resource_usage: Optional[Dict] = None
     temp_files: List[str] = field(default_factory=list)
 
-class CUDACompiler:
-    """Production CUDA compiler with Docker safety and comprehensive metrics."""
+
+class HIPCompiler:
+    """Production HIP compiler with Docker safety and comprehensive metrics for AMD ROCm."""
 
     def __init__(
         self,
-        nvcc_path: str = "nvcc",
-        cuda_arch: str = "auto",
+        hipcc_path: str = "hipcc",
+        gpu_arch: str = "auto",
         optimization_level: str = "-O3",
         temp_dir: Optional[str] = None,
         use_docker: bool = True,
-        docker_image: str = "nvidia/cuda:12.0-devel-ubuntu20.04"
+        docker_image: str = "rocm/dev-ubuntu-22.04:6.0"
     ):
-        self.nvcc_path = nvcc_path
-        self.cuda_arch = cuda_arch
+        self.hipcc_path = hipcc_path
+        self.gpu_arch = gpu_arch
         self.optimization_level = optimization_level
-        self.temp_dir = temp_dir or tempfile.mkdtemp(prefix="cuda_compiler_")
+        self.temp_dir = temp_dir or tempfile.mkdtemp(prefix="hip_compiler_")
         self.use_docker = use_docker
         self.docker_image = docker_image
         self.logger = structlog.get_logger()
@@ -52,15 +53,15 @@ class CUDACompiler:
         self._validate_environment()
 
     def _validate_environment(self):
-        """Validate CUDA and Docker environment."""
+        """Validate ROCm and Docker environment."""
         if self.use_docker:
             if not self._check_docker_available():
                 raise RuntimeError("Docker not available but use_docker=True")
             if not self._check_docker_gpu_support():
-                self.logger.warning("Docker GPU support not detected")
+                self.logger.warning("Docker ROCm GPU support not detected")
         else:
-            if not self._check_nvcc_available():
-                raise RuntimeError(f"nvcc not found at {self.nvcc_path}")
+            if not self._check_hipcc_available():
+                raise RuntimeError(f"hipcc not found at {self.hipcc_path}")
 
     def _check_docker_available(self) -> bool:
         """Check if Docker is available and running."""
@@ -76,10 +77,11 @@ class CUDACompiler:
             return False
 
     def _check_docker_gpu_support(self) -> bool:
-        """Check if Docker supports GPU access."""
+        """Check if Docker supports ROCm GPU access."""
         try:
             result = subprocess.run(
-                ["docker", "run", "--rm", "--gpus=all", "nvidia/cuda:12.0-base-ubuntu20.04", "nvidia-smi"],
+                ["docker", "run", "--rm", "--device=/dev/kfd", "--device=/dev/dri",
+                 "rocm/dev-ubuntu-22.04:6.0", "rocm-smi"],
                 capture_output=True,
                 text=True,
                 timeout=30
@@ -88,11 +90,11 @@ class CUDACompiler:
         except (subprocess.TimeoutExpired, FileNotFoundError):
             return False
 
-    def _check_nvcc_available(self) -> bool:
-        """Check if nvcc is available."""
+    def _check_hipcc_available(self) -> bool:
+        """Check if hipcc is available."""
         try:
             result = subprocess.run(
-                [self.nvcc_path, "--version"],
+                [self.hipcc_path, "--version"],
                 capture_output=True,
                 text=True,
                 timeout=10
@@ -102,30 +104,68 @@ class CUDACompiler:
             return False
 
     def detect_gpu_architecture(self) -> str:
-        """Detect GPU architecture for compilation."""
-        if self.cuda_arch != "auto":
-            return self.cuda_arch
+        """Detect AMD GPU architecture for compilation."""
+        if self.gpu_arch != "auto":
+            return self.gpu_arch
 
         try:
-            # Use nvidia-ml-py or nvidia-smi to detect architecture
+            # Use rocm-smi to detect architecture
             result = subprocess.run(
-                ["nvidia-smi", "--query-gpu=compute_cap", "--format=csv,noheader,nounits"],
+                ["rocm-smi", "--showproductname"],
                 capture_output=True,
                 text=True,
                 timeout=10
             )
 
             if result.returncode == 0:
-                compute_cap = result.stdout.strip().split('\n')[0]
-                major, minor = compute_cap.split('.')
-                return f"sm_{major}{minor}"
+                output = result.stdout.lower()
+                # Map common AMD GPU products to architectures
+                # RDNA 3: gfx1100 (RX 7900), gfx1101, gfx1102
+                # RDNA 2: gfx1030 (RX 6800/6900), gfx1031, gfx1032
+                # CDNA 2: gfx90a (MI200 series)
+                # CDNA: gfx908 (MI100)
+                # Vega: gfx906 (Radeon VII), gfx900
+
+                if "7900" in output or "7800" in output or "7700" in output:
+                    return "gfx1100"
+                elif "6900" in output or "6800" in output or "6700" in output:
+                    return "gfx1030"
+                elif "mi300" in output:
+                    return "gfx942"
+                elif "mi250" in output or "mi210" in output:
+                    return "gfx90a"
+                elif "mi100" in output:
+                    return "gfx908"
+                elif "vega" in output or "radeon vii" in output:
+                    return "gfx906"
+                else:
+                    # Try to get architecture directly from rocminfo
+                    return self._detect_arch_from_rocminfo()
             else:
-                self.logger.warning("Could not detect GPU architecture, using sm_75")
-                return "sm_75"
+                self.logger.warning("Could not detect GPU architecture, using gfx906")
+                return "gfx906"
 
         except Exception as e:
-            self.logger.warning(f"GPU architecture detection failed: {e}, using sm_75")
-            return "sm_75"
+            self.logger.warning(f"GPU architecture detection failed: {e}, using gfx906")
+            return "gfx906"
+
+    def _detect_arch_from_rocminfo(self) -> str:
+        """Detect architecture using rocminfo command."""
+        try:
+            result = subprocess.run(
+                ["rocminfo"],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            if result.returncode == 0:
+                # Look for "Name:" line with gfx prefix
+                match = re.search(r'Name:\s+(gfx\d+)', result.stdout)
+                if match:
+                    return match.group(1)
+        except Exception:
+            pass
+        return "gfx906"  # Default fallback
 
     async def compile_kernel(
         self,
@@ -134,7 +174,7 @@ class CUDACompiler:
         additional_flags: Optional[List[str]] = None,
         include_dirs: Optional[List[str]] = None
     ) -> CompilationResult:
-        """Compile CUDA kernel with comprehensive error handling and metrics."""
+        """Compile HIP kernel with comprehensive error handling and metrics."""
 
         if self.use_docker:
             return await self._compile_in_docker(kernel_code, kernel_name, additional_flags)
@@ -147,7 +187,7 @@ class CUDACompiler:
         kernel_name: str,
         additional_flags: Optional[List[str]] = None
     ) -> CompilationResult:
-        """Compile CUDA kernel in Docker container for maximum safety."""
+        """Compile HIP kernel in Docker container for maximum safety."""
         start_time = time.time()
 
         try:
@@ -159,7 +199,7 @@ class CUDACompiler:
             full_kernel_code = self._wrap_kernel_code(kernel_code, kernel_name)
 
             # Write kernel to file
-            kernel_file = os.path.join(container_temp_dir, f"{kernel_name}.cu")
+            kernel_file = os.path.join(container_temp_dir, f"{kernel_name}.cpp")
             with open(kernel_file, 'w') as f:
                 f.write(full_kernel_code)
 
@@ -169,7 +209,9 @@ class CUDACompiler:
             # Build Docker compilation command
             docker_cmd = [
                 "docker", "run", "--rm",
-                "--gpus=all",  # Enable GPU access
+                "--device=/dev/kfd",  # ROCm kernel driver
+                "--device=/dev/dri",  # Direct Rendering Infrastructure
+                "--group-add=video",  # Video group for GPU access
                 "--memory=8g",  # Memory limit
                 "--cpus=4.0",   # CPU limit
                 "--network=none",  # No network access for security
@@ -179,16 +221,15 @@ class CUDACompiler:
                 self.docker_image,
                 "bash", "-c", f"""
                     set -e
-                    nvcc {self.optimization_level} -arch={arch} \\
-                         -shared -Xcompiler -fPIC \\
-                         --ptxas-options=-v \\
-                         -o {kernel_name}.so {kernel_name}.cu 2>&1
+                    hipcc {self.optimization_level} --offload-arch={arch} \\
+                         -shared -fPIC \\
+                         -Rpass-analysis=kernel-resource-usage \\
+                         -o {kernel_name}.so {kernel_name}.cpp 2>&1
                 """
             ]
 
             # Add additional flags if provided
             if additional_flags:
-                # Insert additional flags before the output specification
                 insert_index = docker_cmd.index("bash") + 2
                 cmd_str = docker_cmd[insert_index]
                 cmd_str = cmd_str.replace(f"-o {kernel_name}.so", f"{' '.join(additional_flags)} -o {kernel_name}.so")
@@ -225,7 +266,7 @@ class CUDACompiler:
             success = process.returncode == 0
             compilation_time = time.time() - start_time
 
-            # Extract CUDA-specific metrics from compilation output
+            # Extract HIP/ROCm-specific metrics from compilation output
             register_pressure = self._extract_register_pressure(stderr_text)
             shared_memory_usage = self._extract_shared_memory_usage(stderr_text)
             warnings = self._parse_compilation_warnings(stderr_text)
@@ -239,7 +280,7 @@ class CUDACompiler:
                     stderr_text += "\nERROR: Binary file was not created"
 
             self.logger.info(
-                "Docker CUDA compilation completed",
+                "Docker HIP compilation completed",
                 kernel_name=kernel_name,
                 success=success,
                 compilation_time=compilation_time,
@@ -261,7 +302,7 @@ class CUDACompiler:
                 temp_files=[kernel_file, binary_path] if binary_path else [kernel_file],
                 resource_usage={
                     "compilation_method": "docker",
-                    "cuda_arch": arch,
+                    "gpu_arch": arch,
                     "container_timeout": 60,
                     "memory_limit": "8g",
                     "cpu_limit": "4.0"
@@ -273,7 +314,7 @@ class CUDACompiler:
             error_msg = f"Docker compilation error: {str(e)}"
 
             self.logger.error(
-                "Docker CUDA compilation failed",
+                "Docker HIP compilation failed",
                 kernel_name=kernel_name,
                 error=error_msg,
                 compilation_time=compilation_time
@@ -292,7 +333,7 @@ class CUDACompiler:
         kernel_name: str,
         additional_flags: Optional[List[str]] = None
     ) -> CompilationResult:
-        """Compile CUDA kernel natively on the host system."""
+        """Compile HIP kernel natively on the host system."""
         start_time = time.time()
 
         try:
@@ -304,7 +345,7 @@ class CUDACompiler:
             full_kernel_code = self._wrap_kernel_code(kernel_code, kernel_name)
 
             # Write kernel to file
-            kernel_file = os.path.join(compile_temp_dir, f"{kernel_name}.cu")
+            kernel_file = os.path.join(compile_temp_dir, f"{kernel_name}.cpp")
             with open(kernel_file, 'w') as f:
                 f.write(full_kernel_code)
 
@@ -313,18 +354,17 @@ class CUDACompiler:
 
             # Build compilation command
             compile_cmd = [
-                self.nvcc_path,
+                self.hipcc_path,
                 self.optimization_level,
-                f"-arch={arch}",
+                f"--offload-arch={arch}",
                 "-shared",
-                "-Xcompiler", "-fPIC",
-                "--ptxas-options=-v",
+                "-fPIC",
+                "-Rpass-analysis=kernel-resource-usage",
                 "-o", os.path.join(compile_temp_dir, f"{kernel_name}.so"),
                 kernel_file
             ]
 
             if additional_flags:
-                # Insert additional flags before output specification
                 compile_cmd.extend(additional_flags)
 
             # Execute compilation with timeout
@@ -373,7 +413,7 @@ class CUDACompiler:
                     stderr_text += "\nERROR: Binary file was not created"
 
             self.logger.info(
-                "Native CUDA compilation completed",
+                "Native HIP compilation completed",
                 kernel_name=kernel_name,
                 success=success,
                 compilation_time=compilation_time,
@@ -395,7 +435,7 @@ class CUDACompiler:
                 temp_files=[kernel_file, binary_path] if binary_path else [kernel_file],
                 resource_usage={
                     "compilation_method": "native",
-                    "cuda_arch": arch,
+                    "gpu_arch": arch,
                     "timeout": 60
                 }
             )
@@ -405,7 +445,7 @@ class CUDACompiler:
             error_msg = f"Native compilation error: {str(e)}"
 
             self.logger.error(
-                "Native CUDA compilation failed",
+                "Native HIP compilation failed",
                 kernel_name=kernel_name,
                 error=error_msg,
                 compilation_time=compilation_time
@@ -421,17 +461,17 @@ class CUDACompiler:
     def _wrap_kernel_code(self, kernel_code: str, kernel_name: str) -> str:
         """Wrap user kernel code with necessary includes and launch wrapper."""
 
-        # Basic includes
+        # Basic HIP includes
         includes = """
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 // Error checking macro
-#define CUDA_CHECK(call) do { \\
-    cudaError_t err = call; \\
-    if (err != cudaSuccess) { \\
-        fprintf(stderr, "CUDA error at %s:%d - %s\\n", __FILE__, __LINE__, cudaGetErrorString(err)); \\
+#define HIP_CHECK(call) do { \\
+    hipError_t err = call; \\
+    if (err != hipSuccess) { \\
+        fprintf(stderr, "HIP error at %s:%d - %s\\n", __FILE__, __LINE__, hipGetErrorString(err)); \\
         exit(1); \\
     } \\
 } while(0)
@@ -451,17 +491,17 @@ extern "C" {{
         // This is a simplified launcher - in practice you'd need more sophisticated parameter handling
         switch(num_args) {{
             case 3:
-                {actual_kernel_name}<<<grid, block, shared_mem>>>((float*)args[0], (float*)args[1], (float*)args[2]);
+                hipLaunchKernelGGL({actual_kernel_name}, grid, block, shared_mem, 0, (float*)args[0], (float*)args[1], (float*)args[2]);
                 break;
             case 4:
-                {actual_kernel_name}<<<grid, block, shared_mem>>>((float*)args[0], (float*)args[1], (float*)args[2], *(int*)args[3]);
+                hipLaunchKernelGGL({actual_kernel_name}, grid, block, shared_mem, 0, (float*)args[0], (float*)args[1], (float*)args[2], *(int*)args[3]);
                 break;
             // Add more cases as needed
             default:
                 fprintf(stderr, "Unsupported number of arguments: %d\\n", num_args);
         }}
-        CUDA_CHECK(cudaGetLastError());
-        CUDA_CHECK(cudaDeviceSynchronize());
+        HIP_CHECK(hipGetLastError());
+        HIP_CHECK(hipDeviceSynchronize());
     }}
 }}
 """
@@ -469,23 +509,36 @@ extern "C" {{
         return includes + kernel_code + wrapper_code
 
     def _extract_register_pressure(self, compilation_output: str) -> int:
-        """Extract register usage from nvcc compilation output."""
-        # Look for ptxas info about register usage
-        register_match = re.search(r'(\d+) registers', compilation_output)
-        if register_match:
-            return int(register_match.group(1))
+        """Extract VGPR (Vector General Purpose Register) usage from hipcc compilation output."""
+        # Look for VGPR usage in ROCm compiler output
+        # Format varies but commonly: "VGPRs: XX" or "NumVGPRs: XX"
+        vgpr_match = re.search(r'(?:VGPRs?|NumVGPRs?):\s*(\d+)', compilation_output, re.IGNORECASE)
+        if vgpr_match:
+            return int(vgpr_match.group(1))
+
+        # Alternative format from resource usage analysis
+        vgpr_match = re.search(r'(\d+)\s+VGPRs', compilation_output)
+        if vgpr_match:
+            return int(vgpr_match.group(1))
+
         return 0
 
     def _extract_shared_memory_usage(self, compilation_output: str) -> int:
-        """Extract shared memory usage from compilation output."""
-        # Look for shared memory usage info
-        smem_match = re.search(r'(\d+) bytes smem', compilation_output)
-        if smem_match:
-            return int(smem_match.group(1))
+        """Extract LDS (Local Data Share) memory usage from compilation output."""
+        # Look for LDS usage info (ROCm equivalent of shared memory)
+        lds_match = re.search(r'(?:LDS|LocalDataShare):\s*(\d+)', compilation_output, re.IGNORECASE)
+        if lds_match:
+            return int(lds_match.group(1))
+
+        # Alternative format
+        lds_match = re.search(r'(\d+)\s+bytes\s+(?:LDS|local)', compilation_output, re.IGNORECASE)
+        if lds_match:
+            return int(lds_match.group(1))
+
         return 0
 
     def _parse_compilation_warnings(self, compilation_output: str) -> List[str]:
-        """Parse compilation warnings from nvcc output."""
+        """Parse compilation warnings from hipcc output."""
         warnings = []
         lines = compilation_output.split('\n')
 
@@ -494,6 +547,8 @@ extern "C" {{
             if 'warning:' in line.lower():
                 warnings.append(line)
             elif 'note:' in line.lower() and 'optimization' in line.lower():
+                warnings.append(line)
+            elif 'remark:' in line.lower():
                 warnings.append(line)
 
         return warnings
@@ -508,3 +563,4 @@ extern "C" {{
                         self.logger.debug(f"Cleaned up temp file: {temp_file}")
                 except Exception as e:
                     self.logger.warning(f"Failed to clean up {temp_file}: {e}")
+

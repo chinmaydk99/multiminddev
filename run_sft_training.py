@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simplified SFT Training Script for CUDA Agents using QLoRA.
+Simplified SFT Training Script for HIP Agents using QLoRA on AMD ROCm.
 This script focuses only on SFT phase without any RL dependencies.
 """
 
@@ -20,7 +20,7 @@ from dataclasses import dataclass
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 # Import data components
-from coding_framework.data.data_pipeline import CUDADataPipeline, TrainingExample
+from coding_framework.data.data_pipeline import HIPDataPipeline, TrainingExample
 from coding_framework.data.curriculum_manager import CurriculumManager
 
 # Import transformers and PEFT for QLoRA
@@ -87,14 +87,14 @@ class SFTTrainer:
         
         # Setup wandb
         wandb.init(
-            project="CUDA-SFT-Training",
+            project="HIP-SFT-Training",
             config=config.__dict__,
             name=f"sft_training_{int(time.time())}"
         )
         
-        # Initialize data pipeline
-        self.data_pipeline = CUDADataPipeline(
-            dataset_name="SakanaAI/AI-CUDA-Engineer-Archive",
+        # Initialize data pipeline for HIP/ROCm
+        self.data_pipeline = HIPDataPipeline(
+            dataset_name="SakanaAI/AI-CUDA-Engineer-Archive",  # Will convert to HIP
             cache_dir="./cache/datasets",
             curriculum_enabled=config.curriculum_enabled,
             initial_tier=config.start_difficulty
@@ -125,7 +125,7 @@ class SFTTrainer:
     def _format_training_example(self, example: TrainingExample) -> str:
         """Format example for instruction following."""
         return f"""<|im_start|>system
-You are an expert CUDA programmer. Optimize the given CUDA kernel for better performance.
+You are an expert HIP programmer for AMD ROCm GPUs. Optimize the given HIP kernel for better performance.
 <|im_end|>
 <|im_start|>user
 
@@ -344,7 +344,7 @@ Problem: {example.problem_description}
 
 def main():
     """Main training function."""
-    parser = argparse.ArgumentParser(description="SFT Training for CUDA Agents")
+    parser = argparse.ArgumentParser(description="SFT Training for HIP Agents on AMD ROCm")
     parser.add_argument("--num-examples", type=int, default=500, help="Number of training examples")
     parser.add_argument("--epochs", type=int, default=3, help="Number of training epochs")
     parser.add_argument("--batch-size", type=int, default=4, help="Training batch size")

@@ -1,8 +1,8 @@
 """
-Multi-Turn RL CUDA Code Generation Framework
+Multi-Turn RL HIP Code Generation Framework for AMD ROCm
 
 A multi-turn reinforcement learning framework using VERL for training
-specialized agents that generate and optimize CUDA kernels.
+specialized agents that generate and optimize HIP kernels on AMD GPUs.
 """
 
 __version__ = "0.1.0"
@@ -11,17 +11,17 @@ __email__ = "multiminddev@example.com"
 
 from .agents import (
     TrainableAgent,
-    TrainableCUDAGeneratorAgent,
-    TrainableCUDAOptimizerAgent,
-    TrainableCUDATesterAgent,
+    TrainableHIPGeneratorAgent,
+    TrainableHIPOptimizerAgent,
+    TrainableHIPTesterAgent,
 )
 from .utils import load_config, setup_logging
 
 __all__ = [
     "TrainableAgent",
-    "TrainableCUDAGeneratorAgent",
-    "TrainableCUDAOptimizerAgent", 
-    "TrainableCUDATesterAgent",
+    "TrainableHIPGeneratorAgent",
+    "TrainableHIPOptimizerAgent",
+    "TrainableHIPTesterAgent",
     "setup_logging",
     "load_config",
 ]

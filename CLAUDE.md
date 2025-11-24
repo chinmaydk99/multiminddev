@@ -4,24 +4,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a **CUDA Multi-Agent RL Training Framework** that combines VERL (reinforcement learning) with multi-agent systems to train CUDA code generation and optimization agents. The system uses a two-phase approach:
+This is a **HIP/ROCm Multi-Agent RL Training Framework** that combines VERL (reinforcement learning) with multi-agent systems to train HIP code generation and optimization agents for AMD GPUs. The system uses a two-phase approach:
 
-1. **SFT Phase**: Supervised fine-tuning with QLoRA using the SakanaAI CUDA dataset
+1. **SFT Phase**: Supervised fine-tuning with QLoRA using HIP kernel examples
 2. **RL Phase**: Multi-turn reinforcement learning with VERL/GRPO for agent collaboration
 
 ## Core Architecture
 
 ### Agent System
 The framework implements three specialized agents:
-- **Generator Agent**: Creates initial CUDA kernel implementations
-- **Optimizer Agent**: Improves and optimizes CUDA code for performance  
+- **Generator Agent**: Creates initial HIP kernel implementations for AMD ROCm
+- **Optimizer Agent**: Improves and optimizes HIP code for performance  
 - **Tester Agent**: Validates correctness and benchmarks performance
 
 ### Key Components
 ```
 src/coding_framework/
-├── agents/                    # Trainable CUDA agents
-├── cuda/                      # CUDA compilation and benchmarking
+├── agents/                    # Trainable HIP agents
+├── hip/                       # HIP compilation and benchmarking (ROCm)
 ├── data/                      # Data pipeline and curriculum learning
 ├── training/                  # VERL integration and multi-turn conversations
 ├── evaluation/                # Benchmark evaluation systems
@@ -44,9 +44,21 @@ uv sync --extra verl
 # Install local VERL (if using local development version)
 cd verl && uv pip install -e . --no-deps && cd ..
 
-# Verify critical imports
-uv run python -c "import torch; print('PyTorch:', torch.__version__, 'CUDA:', torch.cuda.is_available())"
+# Verify critical imports (PyTorch ROCm uses torch.cuda API)
+uv run python -c "import torch; print('PyTorch:', torch.__version__, 'ROCm:', torch.cuda.is_available())"
 uv run python -c "import transformers, datasets, peft, accelerate; print('✅ Core ML OK')"
+```
+
+### ROCm Setup
+```bash
+# Verify ROCm installation
+rocm-smi
+
+# Check hipcc compiler
+hipcc --version
+
+# Verify GPU detection
+rocminfo | grep -i "name"
 ```
 
 ### Development Commands
@@ -66,7 +78,6 @@ uv run pytest -m "integration"
 # Main training commands
 uv run python run_sft_training.py --num-examples 500 --epochs 3
 uv run python run_multiturn_rl_training.py --num-episodes 200 --num-gpus 8
-uv run python launch_complete_cuda_training.py --quick-test
 ```
 
 ## Training System Architecture
@@ -74,25 +85,25 @@ uv run python launch_complete_cuda_training.py --quick-test
 ### Two-Phase Training Pipeline
 
 #### Phase 1: SFT with QLoRA (`run_sft_training.py`)
-- **Input**: SakanaAI dataset (30k+ CUDA kernels)
+- **Input**: HIP kernel examples (converted from SakanaAI dataset)
 - **Method**: QLoRA fine-tuning on Qwen2.5-Coder-1.5B
 - **Output**: Generator and optimizer agent checkpoints
-- **Requirements**: Single GPU (12GB+ VRAM)
+- **Requirements**: Single AMD GPU (12GB+ VRAM)
 
 #### Phase 2: Multi-Turn RL (`run_multiturn_rl_training.py`)
 - **Input**: SFT checkpoints from Phase 1
 - **Method**: VERL/GRPO multi-agent reinforcement learning
 - **Output**: RL-trained collaborative agents
-- **Requirements**: Multi-GPU cluster (8x A100 recommended)
+- **Requirements**: Multi-GPU cluster (8x MI250/MI300 recommended)
 
 ### Data Pipeline Features
 
-#### SakanaAI Dataset Integration
+#### Dataset Integration
 ```python
 # Curriculum learning with 3 difficulty tiers
-Level 1 (Easy): 12,157 examples - vector operations, element-wise ops
-Level 2 (Medium): 12,938 examples - reductions, matrix-vector ops  
-Level 3 (Hard): 5,520 examples - matrix multiplication, convolutions
+Level 1 (Easy): vector operations, element-wise ops
+Level 2 (Medium): reductions, matrix-vector ops  
+Level 3 (Hard): matrix multiplication, convolutions
 ```
 
 #### Curriculum Manager
@@ -102,14 +113,14 @@ Level 3 (Hard): 5,520 examples - matrix multiplication, convolutions
 
 ## Key System Components
 
-### CUDA Compilation & Benchmarking
+### HIP Compilation & Benchmarking
 ```python
-# Safe compilation with Docker sandboxing
-from coding_framework.cuda.compiler import CUDACompiler
-from coding_framework.cuda.benchmarker import CUDABenchmarker
+# Safe compilation with Docker sandboxing on ROCm
+from coding_framework.hip.compiler import HIPCompiler
+from coding_framework.hip.benchmarker import HIPBenchmarker
 
-compiler = CUDACompiler()
-benchmarker = CUDABenchmarker()
+compiler = HIPCompiler()
+benchmarker = HIPBenchmarker()
 ```
 
 ### Multi-Turn Conversations
@@ -125,25 +136,26 @@ conversation_manager = MultiTurnConversationManager(
 
 ### Reward Function
 ```python
-# Multi-component reward calculation
-from coding_framework.training.reward_functions.cuda_performance_reward import CUDAPerformanceReward
+# Multi-component reward calculation for HIP
+from coding_framework.training.reward_functions.hip_performance_reward import HIPPerformanceReward
 
 # Components: Compilation (30%) + Correctness (30%) + Performance (25%) + Efficiency (10%) + Quality (5%)
-reward_function = CUDAPerformanceReward()
+reward_function = HIPPerformanceReward()
 ```
 
 ## Hardware Requirements
 
 ### Minimum (SFT Phase)
-- **GPU**: 1x RTX 3080/4080 (12GB+ VRAM)
+- **GPU**: 1x AMD RX 6800/7900 or MI100 (12GB+ VRAM)
 - **RAM**: 32GB
 - **Storage**: 100GB
+- **ROCm**: 5.6+ recommended
 
 ### Recommended (RL Phase)
-- **GPU**: 8x A100 (40GB VRAM) or 8x RTX 4090
+- **GPU**: 8x MI250 (128GB VRAM) or 8x MI300X
 - **RAM**: 128GB+
 - **Storage**: 500GB+
-- **Docker**: Required for safe CUDA compilation
+- **Docker**: Required for safe HIP compilation
 
 ## Configuration Management
 
@@ -196,16 +208,16 @@ tests/
 pytest -m "unit"              # Fast unit tests
 pytest -m "integration"       # Integration tests
 pytest -m "slow"              # Full training tests
-pytest -m "cuda"              # CUDA hardware tests
+pytest -m "rocm"              # ROCm hardware tests
 ```
 
 ## Safety & Security
 
-### CUDA Safety Measures
-- **Docker sandboxing**: All CUDA compilation in isolated containers
+### HIP Safety Measures
+- **Docker sandboxing**: All HIP compilation in isolated containers
 - **Security validation**: Pattern-based detection of dangerous operations
 - **Resource limits**: Timeout enforcement and memory constraints
-- **Code analysis**: Detection of common CUDA pitfalls and security issues
+- **Code analysis**: Detection of common HIP pitfalls and security issues
 
 ### Training Safety
 - **Curriculum learning**: Gradual difficulty progression
@@ -219,7 +231,7 @@ pytest -m "cuda"              # CUDA hardware tests
 ```bash
 # WandB integration for both training phases
 export WANDB_API_KEY=your_api_key
-# Projects: "CUDA-SFT-Training" and "CUDA-MultiTurn-RL"
+# Projects: "HIP-SFT-Training" and "HIP-MultiTurn-RL"
 ```
 
 ### Key Metrics
@@ -233,9 +245,6 @@ export WANDB_API_KEY=your_api_key
 ```bash
 # Test system components
 uv run python test_complete_system.py
-
-# Quick SFT + RL test (minimal settings)
-uv run python launch_complete_cuda_training.py --quick-test
 ```
 
 ### Full Training Pipeline
@@ -262,14 +271,14 @@ cd verl && uv pip install -e . --no-deps && cd ..
 uv run python -c "import numpy; print('NumPy:', numpy.__version__)"  # Should be < 2.0
 ```
 
-#### GPU/CUDA Issues
+#### GPU/ROCm Issues
 ```bash
-# Verify CUDA setup
-nvidia-smi
-uv run python -c "import torch; print(f'CUDA devices: {torch.cuda.device_count()}')"
+# Verify ROCm setup
+rocm-smi
+uv run python -c "import torch; print(f'ROCm devices: {torch.cuda.device_count()}')"
 
-# Test Docker GPU access
-docker run --rm --gpus all nvidia/cuda:12.0-base nvidia-smi
+# Test Docker ROCm access
+docker run --rm --device=/dev/kfd --device=/dev/dri rocm/dev-ubuntu-22.04:6.0 rocm-smi
 ```
 
 #### Training Issues
@@ -287,17 +296,15 @@ uv run python run_multiturn_rl_training.py --no-docker
 ### Training Entry Points
 - `run_sft_training.py` - SFT phase with QLoRA  
 - `run_multiturn_rl_training.py` - RL phase with VERL
-- `launch_complete_cuda_training.py` - Complete pipeline orchestrator
 
 ### Core Implementation
 - `src/coding_framework/data/` - Data pipeline and curriculum
 - `src/coding_framework/training/` - VERL integration and conversations
-- `src/coding_framework/cuda/` - Compilation and benchmarking
-- `src/coding_framework/agents/` - Trainable CUDA agents
+- `src/coding_framework/hip/` - HIP compilation and benchmarking
+- `src/coding_framework/agents/` - Trainable HIP agents
 
 ### Configuration & Docs
 - `TRAINING_GUIDE.md` - Detailed training instructions
-- `cuda_rl_system_spec.md` - System specification
 - `pyproject.toml` - Dependency management with UV
 
 ## Important Notes
@@ -306,17 +313,17 @@ uv run python run_multiturn_rl_training.py --no-docker
 - **NEVER edit pyproject.toml directly** - always use `uv add`/`uv remove`
 - **Complex ML dependencies** require UV for proper resolution
 - **NumPy < 2.0 constraint** due to VERL compatibility requirements
-- **PyTorch 2.1-2.7 range** for VERL/VLLM compatibility
+- **PyTorch with ROCm** - install from ROCm PyTorch wheels
 
 ### Training Considerations
-- **Docker required** for safe CUDA compilation in RL phase
+- **Docker required** for safe HIP compilation in RL phase
 - **Multi-GPU setup** needed for effective RL training
 - **Wandb integration** for experiment tracking and monitoring
 - **Curriculum learning** automatically progresses difficulty
 
 ### Performance Expectations
 - **SFT**: ~2-4 hours for full training on single GPU
-- **RL**: ~12-24 hours on 8x A100 cluster
-- **Final models**: Should achieve >2x CUDA speedups with correct implementations
+- **RL**: ~12-24 hours on 8x MI250 cluster
+- **Final models**: Should achieve >2x speedups with correct HIP implementations
 
-This framework represents a complete production-ready system for training collaborative CUDA optimization agents using state-of-the-art ML techniques.
+This framework represents a complete production-ready system for training collaborative HIP optimization agents for AMD ROCm using state-of-the-art ML techniques.

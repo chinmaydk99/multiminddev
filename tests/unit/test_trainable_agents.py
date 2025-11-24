@@ -1,33 +1,34 @@
 """
 Unit tests for trainable agent implementations.
-Tests the multi-agent RL architecture with GRPO/DAPO support.
+Tests the multi-agent RL architecture with GRPO/DAPO support for HIP/ROCm.
 """
+
+import asyncio
+import json
+import tempfile
+from pathlib import Path
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 import torch
-import asyncio
-from pathlib import Path
-import tempfile
-import json
-from unittest.mock import Mock, patch, MagicMock
 
-from src.coding_framework.agents.trainable_agent import TrainableAgent, GenerationOutput
-from src.coding_framework.agents.trainable_cuda_agents import (
-    TrainableCUDAGeneratorAgent,
-    TrainableCUDAOptimizerAgent,
-    TrainableCUDATesterAgent
+from src.coding_framework.agents.trainable_agent import GenerationOutput, TrainableAgent
+from src.coding_framework.agents.trainable_hip_agents import (
+    TrainableHIPGeneratorAgent,
+    TrainableHIPOptimizerAgent,
+    TrainableHIPTesterAgent,
 )
 from src.coding_framework.training.multi_turn_conversation import (
+    AgentRole,
+    ConversationTurn,
+    HIPConversationState,
     MultiTurnConversationManager,
     TurnLevelRewardDistributor,
-    CUDAConversationState,
-    ConversationTurn,
-    AgentRole
 )
 from src.coding_framework.training.sft_data_preparation import (
+    HIPDatasetGenerator,
+    SFTDataItem,
     SFTDataPipeline,
-    CUDADatasetGenerator,
-    SFTDataItem
 )
 
 
@@ -131,19 +132,19 @@ class TestTrainableAgent:
             assert "total_loss" in metrics
 
 
-class TestCUDAAgents:
-    """Test specialized CUDA agents."""
+class TestHIPAgents:
+    """Test specialized HIP agents for AMD ROCm."""
     
     @pytest.mark.asyncio
     @patch('src.coding_framework.agents.trainable_agent.AutoModelForCausalLM')
     @patch('src.coding_framework.agents.trainable_agent.AutoTokenizer')
     async def test_generator_agent(self, mock_tokenizer_class, mock_model_class):
-        """Test CUDA generator agent."""
+        """Test HIP generator agent."""
         mock_model_class.from_pretrained.return_value = MagicMock()
         mock_tokenizer_class.from_pretrained.return_value = MagicMock()
         
-        agent = TrainableCUDAGeneratorAgent(
-            agent_id="cuda_gen",
+        agent = TrainableHIPGeneratorAgent(
+            agent_id="hip_gen",
             model_name="test-model"
         )
         
@@ -156,8 +157,8 @@ class TestCUDAAgents:
                 attention_mask=torch.ones(3)
             )
             
-            result = await agent.generate_cuda_kernel(
-                "Create a simple CUDA kernel",
+            result = await agent.generate_hip_kernel(
+                "Create a simple HIP kernel",
                 tensor_info={"shape": (1024,), "dtype": "float"}
             )
             
@@ -169,12 +170,12 @@ class TestCUDAAgents:
     @patch('src.coding_framework.agents.trainable_agent.AutoModelForCausalLM')
     @patch('src.coding_framework.agents.trainable_agent.AutoTokenizer')
     async def test_optimizer_agent(self, mock_tokenizer_class, mock_model_class):
-        """Test CUDA optimizer agent."""
+        """Test HIP optimizer agent."""
         mock_model_class.from_pretrained.return_value = MagicMock()
         mock_tokenizer_class.from_pretrained.return_value = MagicMock()
         
-        agent = TrainableCUDAOptimizerAgent(
-            agent_id="cuda_opt",
+        agent = TrainableHIPOptimizerAgent(
+            agent_id="hip_opt",
             model_name="test-model"
         )
         
@@ -190,7 +191,7 @@ class TestCUDAAgents:
             
             result = await agent.optimize_kernel(
                 kernel_code,
-                optimization_targets=["shared_memory"]
+                optimization_targets=["lds_memory"]
             )
             
             assert "optimized_code" in result
@@ -199,9 +200,9 @@ class TestCUDAAgents:
     
     @pytest.mark.asyncio
     async def test_tester_agent_rule_based(self):
-        """Test rule-based CUDA tester agent."""
-        agent = TrainableCUDATesterAgent(
-            agent_id="cuda_tester",
+        """Test rule-based HIP tester agent."""
+        agent = TrainableHIPTesterAgent(
+            agent_id="hip_tester",
             use_trained_model=False
         )
         
@@ -235,7 +236,7 @@ class TestMultiTurnConversation:
     @pytest.fixture
     def conversation_state(self):
         """Create a sample conversation state."""
-        state = CUDAConversationState(
+        state = HIPConversationState(
             problem="Optimize matrix multiplication",
             problem_id="test_001",
             difficulty="medium"
@@ -279,7 +280,7 @@ class TestMultiTurnConversation:
         assert conversation_state.should_terminate_early() == True
         
         # Test performance threshold
-        state2 = CUDAConversationState(
+        state2 = HIPConversationState(
             problem="test",
             problem_id="test_002"
         )
@@ -294,7 +295,7 @@ class TestMultiTurnConversation:
             final_weight=0.7
         )
         
-        state = CUDAConversationState(
+        state = HIPConversationState(
             problem="test",
             problem_id="test_003"
         )
@@ -316,15 +317,15 @@ class TestMultiTurnConversation:
 class TestSFTDataPreparation:
     """Test SFT data preparation pipeline."""
     
-    def test_cuda_dataset_generator(self):
-        """Test synthetic CUDA dataset generation."""
-        generator = CUDADatasetGenerator()
+    def test_hip_dataset_generator(self):
+        """Test synthetic HIP dataset generation."""
+        generator = HIPDatasetGenerator()
         
         # Test generator examples
         gen_examples = generator.generate_generator_examples(100)
         assert len(gen_examples) == 100
         assert all(isinstance(ex, SFTDataItem) for ex in gen_examples)
-        assert all("Generate CUDA kernel" in ex.input_text for ex in gen_examples)
+        assert all("Generate HIP kernel" in ex.input_text for ex in gen_examples)
         
         # Test optimizer examples
         opt_examples = generator.generate_optimizer_examples(50)
