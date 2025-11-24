@@ -1,0 +1,76 @@
+# Default configuration for kernel generation pipeline
+
+# Target hardware
+hardware:
+  architecture: "gfx942"  # MI300X
+  device_id: 0
+
+# LLM Backend
+generator:
+  backend: "openai"  # Options: openai, huggingface, vllm
+  model: "gpt-4-turbo-preview"  # Or "Qwen/Qwen2.5-Coder-7B-Instruct" for local
+  temperature: 0.7
+  max_tokens: 4096
+
+# Execution sandbox
+execution:
+  use_docker: true
+  docker_image: "rocm/pytorch-nightly:latest"
+  timeout_seconds: 120
+  num_warmup_runs: 3
+  num_benchmark_runs: 10
+  correctness_tolerance: 0.001
+
+# Reward function
+reward:
+  target_speedup: 2.0
+  performance_weight: 0.8
+  efficiency_weight: 0.2
+  compilation_failure_penalty: -1.0
+  correctness_failure_penalty: -0.5
+
+# Training loop (for future RL training)
+training:
+  max_iterations_per_kernel: 5
+  early_stop_speedup: 2.0  # Stop if we achieve this speedup
+  save_all_attempts: true
+  log_dir: "./logs"
+  checkpoint_dir: "./checkpoints"
+
+# Operations to target (in order of priority)
+operations:
+  - name: "rmsnorm"
+    shapes:
+      - batch_seq: 4096
+        hidden: 4096
+      - batch_seq: 8192
+        hidden: 4096
+      - batch_seq: 4096
+        hidden: 8192
+    dtype: "float16"
+    
+  - name: "attention"
+    shapes:
+      - batch: 1
+        seq_len: 2048
+        num_heads: 32
+        head_dim: 128
+      - batch: 1
+        seq_len: 4096
+        num_heads: 32
+        head_dim: 128
+    dtype: "float16"
+    
+  - name: "gemm"
+    shapes:
+      - M: 1
+        K: 4096
+        N: 4096
+      - M: 8
+        K: 4096
+        N: 4096
+      - M: 32
+        K: 4096
+        N: 14336  # LLaMA FFN up projection
+    dtype: "float16"
+
