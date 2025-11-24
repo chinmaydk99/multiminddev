@@ -1,0 +1,48 @@
+# MI300 Kernel Execution Sandbox
+# Based on AMD's official PyTorch nightly with ROCm
+FROM rocm/pytorch-nightly:latest
+
+LABEL maintainer="multimind"
+LABEL description="Sandbox for compiling, executing, and profiling HIP kernels on MI300"
+
+# Install additional tools for kernel development and profiling
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    rocprofiler-dev \
+    roctracer-dev \
+    hipify-clang \
+    build-essential \
+    cmake \
+    ninja-build \
+    git \
+    vim \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python packages for benchmarking and comparison
+RUN pip install --no-cache-dir \
+    numpy \
+    pandas \
+    triton \
+    structlog \
+    pyyaml
+
+# Create sandbox user for safety (don't run as root)
+RUN useradd -m -s /bin/bash sandbox && \
+    mkdir -p /workspace /kernels /results && \
+    chown -R sandbox:sandbox /workspace /kernels /results
+
+# Set up environment
+ENV HIP_VISIBLE_DEVICES=0
+ENV ROCM_PATH=/opt/rocm
+ENV PATH="${ROCM_PATH}/bin:${PATH}"
+ENV LD_LIBRARY_PATH="${ROCM_PATH}/lib:${LD_LIBRARY_PATH}"
+
+# Copy execution scripts
+COPY execution/kernel_runner.py /app/kernel_runner.py
+COPY execution/profiler.py /app/profiler.py
+
+WORKDIR /workspace
+USER sandbox
+
+# Default command: run kernel execution
+ENTRYPOINT ["python", "/app/kernel_runner.py"]
+
