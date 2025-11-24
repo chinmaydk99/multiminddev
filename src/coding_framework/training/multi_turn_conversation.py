@@ -42,8 +42,8 @@ class ConversationTurn:
     attention_mask: Optional[torch.Tensor] = None
 
 @dataclass
-class CUDAConversationState:
-    """Complete state of a multi-turn CUDA optimization conversation."""
+class HIPConversationState:
+    """Complete state of a multi-turn HIP optimization conversation."""
     conversation_id: str
     problem_description: str
     difficulty_tier: str
@@ -67,7 +67,7 @@ class CUDAConversationState:
     total_turns: int = 0
 
 class MultiTurnConversationManager:
-    """Manages multi-turn conversations between CUDA optimization agents."""
+    """Manages multi-turn conversations between HIP optimization agents."""
 
     def __init__(
         self,
@@ -96,11 +96,11 @@ class MultiTurnConversationManager:
         self,
         problem: Dict[str, Any],
         conversation_id: str
-    ) -> CUDAConversationState:
-        """Run complete multi-turn conversation for CUDA optimization."""
+    ) -> HIPConversationState:
+        """Run complete multi-turn conversation for HIP optimization."""
 
         # Initialize conversation state
-        conversation = CUDAConversationState(
+        conversation = HIPConversationState(
             conversation_id=conversation_id,
             problem_description=problem["description"],
             difficulty_tier=problem.get("difficulty", "medium"),
@@ -148,10 +148,10 @@ class MultiTurnConversationManager:
 
     async def _generation_phase(
         self,
-        conversation: CUDAConversationState,
+        conversation: HIPConversationState,
         problem: Dict[str, Any]
     ):
-        """Phase 1: Generate initial CUDA kernel."""
+        """Phase 1: Generate initial HIP kernel."""
 
         # Prepare prompt for generator
         generator_prompt = self._create_generator_prompt(problem)
@@ -188,7 +188,7 @@ class MultiTurnConversationManager:
 
     async def _optimization_phase(
         self,
-        conversation: CUDAConversationState,
+        conversation: HIPConversationState,
         problem: Dict[str, Any]
     ):
         """Phase 2: Iterative optimization through agent collaboration."""
@@ -270,7 +270,7 @@ class MultiTurnConversationManager:
 
     async def _test_kernel(
         self,
-        conversation: CUDAConversationState,
+        conversation: HIPConversationState,
         turn: ConversationTurn,
         kernel_code: str
     ):
@@ -330,7 +330,7 @@ class MultiTurnConversationManager:
 
         turn.execution_time = time.time() - turn_start_time
 
-    async def _final_evaluation(self, conversation: CUDAConversationState):
+    async def _final_evaluation(self, conversation: HIPConversationState):
         """Final evaluation and reward calculation."""
 
         # Calculate final reward based on conversation outcome
@@ -358,22 +358,22 @@ class MultiTurnConversationManager:
     def _create_generator_prompt(self, problem: Dict[str, Any]) -> str:
         """Create prompt for initial code generation."""
         return f"""
-Generate a CUDA kernel to solve the following problem:
+Generate a HIP kernel to solve the following problem:
 
 Problem: {problem["description"]}
 
 Requirements:
-- Write efficient CUDA C++ code
-- Include proper error checking
+- Write efficient HIP C++ code
+- Include proper error checking with hipGetLastError()
 - Use appropriate grid and block dimensions
 - Optimize for the given problem size
 
-Please provide a complete CUDA kernel implementation.
+Please provide a complete HIP kernel implementation.
 """
 
     def _create_optimizer_prompt(
         self,
-        conversation: CUDAConversationState,
+        conversation: HIPConversationState,
         problem: Dict[str, Any]
     ) -> str:
         """Create prompt for optimization phase."""
@@ -382,7 +382,7 @@ Please provide a complete CUDA kernel implementation.
         last_turn = conversation.turns[-1]
 
         return f"""
-Optimize the following CUDA kernel for better performance:
+Optimize the following HIP kernel for better performance:
 
 Original Problem: {problem["description"]}
 
@@ -398,15 +398,15 @@ Target Performance:
 - Speedup: {conversation.target_performance.get("speedup", 2.0):.2f}x
 
 Please provide an optimized version that improves performance. Consider:
-- Memory access patterns
-- Shared memory usage
+- Memory access patterns (coalescing)
+- LDS (Local Data Share/shared memory) usage
 - Thread divergence
-- Occupancy optimization
+- Occupancy optimization for AMD GPUs
 """
 
     def _create_fix_prompt(
         self,
-        conversation: CUDAConversationState,
+        conversation: HIPConversationState,
         problem: Dict[str, Any]
     ) -> str:
         """Create prompt for fixing compilation errors."""
@@ -419,7 +419,7 @@ Please provide an optimized version that improves performance. Consider:
             error_message = compilation_result.stderr
 
         return f"""
-Fix the compilation errors in the following CUDA kernel:
+Fix the compilation errors in the following HIP kernel:
 
 Original Problem: {problem["description"]}
 
@@ -429,15 +429,15 @@ Current Kernel (with errors):
 Compilation Error:
 {error_message}
 
-Please provide a corrected version that compiles successfully.
+Please provide a corrected version that compiles successfully with hipcc.
 """
 
     def _extract_kernel_code(self, response: str) -> str:
-        """Extract CUDA kernel code from agent response."""
+        """Extract HIP kernel code from agent response."""
 
         # Look for code blocks
         # First try to find code in markdown code blocks
-        code_blocks = re.findall(r'```(?:cuda|cpp|c)?\n(.*?)\n```', response, re.DOTALL)
+        code_blocks = re.findall(r'```(?:hip|cuda|cpp|c)?\n(.*?)\n```', response, re.DOTALL)
 
         if code_blocks:
             return code_blocks[0].strip()
